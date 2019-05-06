@@ -1,0 +1,626 @@
+var bmap = require('../../libs/bmap-wx.min.js');
+var imageUtil = require('../../utils/suofangbi.js');
+var formatTime = require('../../utils/util.js');
+var pickerFile = require('../tools/js/picker_datetime.js');
+var auth_conf = require('../../utils/auth.js');
+var wxMarkerData = [];  //定位成功回调对象  
+var longitude_s = '';   //经度  
+var latitude_s = '';    //纬度  
+var app = getApp();
+var that;
+var arr_old;
+var exceptionRange = ['请选择', '1#', '2#', '3#', '4#', '5#', '6#', '7#', '8#', '9#', '10#', '11#', '12#', '13#', '14#', '15#', '16#', '17#', '18#'];
+Page({
+
+  data: {
+    picker1Value: 0,
+    picker1Range: exceptionRange,
+    exception_remark: '',
+    val_detial: '',
+    hour: '',
+    hours: [],
+    minute: '',
+    minutes: [],
+    second: '',
+    seconds: [],
+    value: [],
+    currentValue: [],
+    flag: false,
+    ctx_width:0,
+    ctx_height:0,
+    navs: [
+      {
+        // image: 'https://m.youcai.xin/static/img/baby.png',
+        text: '提交',
+        ys: "iconfont icon-queren",
+        styles: "font-size:35px; color:#32CD32",
+        // style: "width:120px;background-color:#32CD32;",
+        key: "add"
+      }, {
+        // image: 'https://m.youcai.xin/static/img/old.png',
+        text: '扫码',
+        ys: "iconfont icon-erweima",
+        styles: "font-size:35px; color:red",
+        // style: "width:120px;background-color:#FF8000;",
+        key: "scan"
+      },
+    ],
+    nas: [{
+      text: '时间设置',
+      ys: "iconfont icon-shezhijiahaoshijian",
+      styles: "font-size:35px; color:#32CD32",
+    }, {
+      text: '返回上页',
+      ys: "iconfont icon-fanhui",
+      styles: "font-size:35px; color:red",
+    }],
+    //导航图
+    avatarUrl: "http://scm.transgd.com.cn:18000/oms/static/img/pic.jpg",
+    // avatarUrl:"../../Image/pic.jpg",
+    imagewidths: 0,
+    imageheight: 0,
+    //弹出框
+    showModal: false,
+    showView: true,
+    showTab: true,
+    images: [],
+    imageWidth: 190,
+    spanStyle: "iconfont icon-CombinedShape;color:red;font-size:18px;padding-left:73px;"
+  },
+	
+	fail_use: auth_conf.fail_use,
+
+  onShow: function () {
+    var that = this;
+		
+  },
+  //开始
+  onLoad: function (options) {
+    that = this;
+
+    // 初始化时间选择器
+    this.datetimePicker = new pickerFile.pickerDatetime({
+      page: this,
+      animation: 'slide',
+      duration: 500
+    });
+
+    /* 获取定位地理位置 */
+    // 新建bmap对象   
+    var BMap = new bmap.BMapWX({
+      ak: app.getBMapAk()
+    });
+    var fail = function (data) {
+      console.log(data);
+    };
+    var success = function (data) {
+      //返回数据内，已经包含经纬度  
+
+      //使用wxMarkerData获取数据  
+      wxMarkerData = data.wxMarkerData;
+      longitude_s = wxMarkerData[0].latitude;
+      longitude_s = wxMarkerData[0].longitude
+      //把所有数据放在初始化data内  
+      that.setData({
+        markers: wxMarkerData,
+        latitude: wxMarkerData[0].latitude,
+        longitude: wxMarkerData[0].longitude,
+        address: wxMarkerData[0].address,
+        cityInfo: data.originalData.result.addressComponent,
+        'exception_Remark': ''
+        //
+        // attemperNo: option.attemperNo,
+        // driver: option.driver,
+        // vehicleNo: option.vehicleNo
+
+      });
+    }
+    // 发起regeocoding检索请求   
+    BMap.regeocoding({
+      fail: fail,
+      success: success
+    });
+  },
+
+	
+  userNameInput: function (e) {
+    var that = this
+    that.data.order_code = e.detail.value;
+  },
+	//新功能--搜索
+	jumpToMyPage_sousuo: function () {
+		var that = this;
+		//console.log(auth_conf)
+		console.log(wx.getStorageSync('authority'))
+		if (wx.getStorageSync('authority').loadingCar.loadingSearch == 1 ){
+			that.scan_code(that.data.order_code);
+		}else{
+			this.fail_use();
+		}
+	},
+  scan_code: function (str_code) {
+    var that = this;
+    if (str_code == undefined) {
+      wx.showToast({
+        title: '输入单号不能为空!', icon: 'loading', duration: 1000
+      });
+    } else {
+      wx.showToast({
+        title: '请求成功',
+        icon: 'loading',
+        duration: 5000
+      });
+      wx.request({
+        url: app.getBaseUrl() + 'service/wechat_WechatqueryByCode',
+        method: "POST",
+        data: {code: str_code },
+        success: function (e) {
+          console.log(e);
+          var res=e.data.data;
+          wx.hideLoading();
+          if (res.isSuccess == 'N') {
+            wx.showToast({
+              title: '单号不存在',
+              icon: 'loading',
+              duration: 1000
+            });
+            that.setData({
+              val: ''
+            });
+          } else {
+            if (res.start_code == "N") {
+              wx.showToast({
+                title: '该单号未绑定设备号',
+                icon: 'loading',
+                duration: 1000
+              });
+              that.setData({
+                val: ''
+              });
+            } else {
+              //进行数据的传递查看是否能后传来数据
+              var s_obj = e.data.data.data;
+              console.log(s_obj);
+              var size = s_obj.length;
+              var o_b_j = e.data.data.data[0];
+              //设置时间 
+              var oldTime = o_b_j.loadingDate;//开始时间
+              var endTime = o_b_j.loadingDateEnd;//结束时间
+              console.log(endTime);
+
+              var loadingDateStr = '';//开始时间设置
+              var loadingDateEndStr = '';
+              var enableModifyLoadingDate = true;
+              var enableModifyLoadingDateEnd = true;
+              if (o_b_j.loadingDate != undefined && o_b_j.loadingDate != '' && o_b_j.loadingDate !=null) {
+                loadingDateStr = new Date(o_b_j.loadingDate.replace(/-/g, '/')).Format('yyyy年MM月dd日 hh:mm');
+                enableModifyLoadingDate = false;
+              }
+              if (o_b_j.loadingDateEnd != undefined && o_b_j.loadingDateEnd != '' && o_b_j.loadingDateEnd!=null) {
+                loadingDateEndStr = new Date(o_b_j.loadingDateEnd.replace(/-/g, '/')).Format('yyyy年MM月dd日 hh:mm');
+                enableModifyLoadingDateEnd = false;
+                that.data.end_Date=true;
+              }
+              var ct_exception_remarks='';
+              if (o_b_j.ctExceptionRemarks == undefined || o_b_j.ctExceptionRemarks == '' || o_b_j.ctExceptionRemarks==null){
+                ct_exception_remarks="";
+              }else{
+                ct_exception_remarks = o_b_j.ctExceptionRemarks
+              }
+              if (size == 1) {//如果是一则进行数据的跳转
+                var enableModifyLoadPlatform = true;
+                var loadPlatform = o_b_j.loadPlatform;
+                var v_val = 0;
+                if (loadPlatform) {
+                  enableModifyLoadPlatform = false;
+                  v_val = loadPlatform.split("#")[0];
+                }
+                console.log(v_val);
+                that.setData({
+                  'attemperNo': o_b_j.attemperNo,
+                  'driver': o_b_j.driver,
+                  'vehicleNo': o_b_j.vehicleNo,
+                  'loadingDate': loadingDateStr,
+                  'loadingDateEnd': loadingDateEndStr,
+                  'enableModifyLoadingDate': enableModifyLoadingDate,
+                  'enableModifyLoadingDateEnd': enableModifyLoadingDateEnd,
+                  'val_detial': ct_exception_remarks,
+                  'picker1Value': v_val,
+                  'picker1Range': exceptionRange,
+                  'enableModifyLoadPlatform': enableModifyLoadPlatform
+                });
+              } else {//否则就让用户进行选中
+                arr_old = s_obj;//将数组赋值给空数组
+                var arr = new Array(s_obj.length + 1);
+                arr[0] = '请选择';
+                for (var i = 0; i < s_obj.length; i++) {
+                  //arr.push(o_j[i].displayValue);
+                  arr[i + 1] = s_obj[i].signNo;
+                }
+                that.onLoad(arr);
+                that.showDialogBtn();
+                that.setData({
+                  val: ''
+                });
+              }
+            }
+          }
+        }
+      });
+    }
+  },
+	//扫描
+	jumpToMyPage_saomiao: function () {
+		var that = this;
+		that.scan_code_to();
+	},
+  scan_code_to: function () {
+    var that = this;
+    arr_old = [];//每次只要一进来先清空数组
+    wx.scanCode({
+      success: function (result) {
+        var s = result.result;
+        console.log(s);
+        that.scan_code(s);
+      },
+
+      fail: function (error) {
+        console.log(error);
+      }
+    })
+  },
+  imageLoad: function (e) {//用来进行图片的缩放比的
+    var imageSize = imageUtil.imageutil(e)
+    this.setData({
+      imagewidth: imageSize.imageWidth,
+      imageheight: imageSize.imageHeight
+    })
+  },
+  /**此处是进行选择选中的 */
+  normalPickerBindchange: function (e) {
+    this.setData({
+      picker1Value: e.detail.value
+    })
+  },
+
+  /**
+   * 修改装车时间
+   */
+  updateLoadingDate: function () {
+    console.log("修改装车时间");
+    var that = this;
+    var attemperNo_s = that.data.attemperNo;
+    var ctExceptionRemarks = that.data.exception_Remark;
+    var loadingDateStr = that.data.loadingDate;
+    console.log(loadingDateStr);
+    var loadingDateEndStr = that.data.loadingDateEnd;
+    console.log(loadingDateEndStr);
+    var tempFilePaths = that.data.images;
+    var loadingDate, loadingDateEnd;
+    // 校验开始时间是否为空
+    if (loadingDateStr == '') {
+      wx.showToast({
+        title: '请设置开始时间',
+        icon: 'loading',
+        duration: 1000
+      });
+      return false;
+    } else {
+      // 校验开始时间是否大于当前时间
+      loadingDate = new Date(Date.parse(loadingDateStr.replace("年", "/").replace("月", "/").replace("日", "/")));
+      if (loadingDate > new Date()) {
+        wx.showToast({
+          title: '不能晚于当前时间',
+          icon: 'loading',
+          duration: 1000
+        });
+        return false;
+      }
+    }
+    // 校验结束时间是否大于开始时间
+    if (loadingDateEndStr != '') {
+      loadingDateEnd = new Date(Date.parse(loadingDateEndStr.replace("年", "/").replace("月", "/").replace("日", "/")));
+      if (loadingDateEnd > new Date()) {
+        wx.showToast({
+          title: '不能晚于当前时间',
+          icon: 'loading',
+          duration: 1000
+        });
+        return false;
+      }
+      if (loadingDateEnd < loadingDate) {
+        wx.showToast({
+          title: '结束时间过早',
+          icon: 'loading',
+          duration: 1000
+        });
+        return false;
+      }
+    }
+
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_WechatupdateTruckTime',
+      method: "POST",
+      data: {
+        'loadingDate': loadingDateStr,
+        'loadingDateEnd': loadingDateEndStr,
+        'attemperNo': attemperNo_s,
+        'ctExceptionRemarks': ctExceptionRemarks,
+        'loadPlatform': that.data.picker1Range[that.data.picker1Value]
+      },
+      success: function (e) {
+        var obj_s=e.data.data;
+        if (obj_s.data.isSuccess == 'N') {
+          wx.showToast({
+            title: obj_s.data.msg,
+            icon: 'loading',
+            duration: 1000
+          });
+        } else if (tempFilePaths.length == 0) {
+          // 不上传照片
+          wx.showToast({
+            title: '设置成功',
+            icon: 'loading',
+            duration: 1000
+          });
+          that.hideModal();
+        }
+      }
+    });
+    return true;
+  },
+  inputRemark: function (e) {
+    var that = this;
+    that.data.exception_Remark = e.detail.value;
+
+  },
+  upload_prcture: function () {//上传照片
+    // var foreightNo_uv = that.data.foreightNo;
+    // var signNo = that.data.signNo;
+		console.log(auth_conf.daoche_upload)
+		if (wx.getStorageSync('authority').loadingCar.loadingUpload == 1){
+			var that = this;
+			var tempFilePaths = that.data.images;
+			var num_no = tempFilePaths.length;
+			var s = that.data.showTab
+			var latitude_wd = that.data.latitude;//纬度
+
+			var longitude_jd = that.data.longitude;//经度
+			var tempFilePaths = that.data.images;
+			/**此处是装车货台 */
+			var select_er = that.data.picker1Value;
+			console.log(select_er);//0
+			var select_er1 = that.data.picker1Range;
+			console.log(select_er1);//数组
+			console.log("select_er1");//数组
+			var selector_value = select_er1[select_er].trim();
+			console.log(selector_value);//选中
+			var remark_w = that.data.val_detial;
+
+			// var num_no = tempFilePaths.length;
+			//  var str_code = this.data.order_code;
+			var str_code = this.data.attemperNo;
+
+			if (str_code == undefined || str_code == '') {
+				wx.showToast({
+					title: '请添输入单号或扫码',
+					icon: 'loading',
+					duration: 3000,
+				})
+				return;
+			} else if (selector_value == '请选择') {
+				wx.showToast({
+					title: '请选择装车货台',
+					icon: 'loading',
+					duration: 3000,
+				})
+				return;
+			} else {
+				if (tempFilePaths.length <= 0) {
+					var flg_endDate = that.data.end_Date;
+					console.log(flg_endDate + "zhe zhi");
+					if (flg_endDate != undefined) {
+						wx.showToast({
+							title: '请拍照上传', icon: 'none', duration: 3000
+						});
+						return;
+					}
+					var end_time = that.data.loadingDateEnd;
+					console.log(end_time + "" + "第二个值");
+					if (end_time != '' && end_time !== undefined) {
+						wx.showToast({
+							title: '请拍照上传', icon: 'none', duration: 3000
+						});
+						return;
+					}
+
+				}
+				var updateLoadingDateResult = that.updateLoadingDate();
+				if (updateLoadingDateResult && num_no != 0) {
+					if (s) {
+						that.setData({
+							showTab: (!that.data.showTab),
+						})
+
+						wx.showToast({
+							title: '上传中..',
+							icon: 'loading',
+							duration: 60000,
+						})
+						var detial = that.data.exception_Remark;
+
+						var attachmentsIds = "";
+						//上传功能
+						that.toUploadFile(tempFilePaths, str_code, num_no, latitude_wd, longitude_jd, attachmentsIds, remark_w);
+					}
+				}
+			}
+		}else{
+			this.fail_use()
+		}
+    
+  },
+ 
+  //最新版本的上传功能
+	toUploadFile: function (tempFilePaths, str_code, num_no, latitude_wd, longitude_jd, attachmentsIds, remark_w) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_savetruckFile',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: { 'attemperNo': str_code, 'number_NO': num_no, 'latitude': latitude_wd, 'longitude': longitude_jd, 'attachmentsIds': attachmentsIds},
+      success: function (c) {
+        console.log(c);
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') {//上传成功
+          tempFilePaths.splice(0, 1);
+          num_no = tempFilePaths.length;
+          if (attachmentsIds!="") {
+            attachmentsIds = attachmentsIds + ',' + v_obj.data;//上传的文件名称
+          } else {
+            console.log(v_obj.data);
+            attachmentsIds = v_obj.data;//上传的文件名称
+          }
+          if (num_no == 0) {//当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function () {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({ delta: 1 });
+              }
+            }, 3000);
+          } else {
+            that.toUploadFile(tempFilePaths, str_code, num_no, latitude_wd, longitude_jd, attachmentsIds);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  },
+  //完
+  //拍照button
+  photo_prcture: function () {
+		console.log(wx.getStorageSync('authority').loadingCar.loadingCamara)
+		if (wx.getStorageSync('authority').loadingCar.loadingCamara == 1){
+			var that = this;
+			wx.showActionSheet({
+				itemList: ['从相册中选择', '拍照'],
+				itemColor: "#CED63A",
+				success: function (res) {
+					if (res.tapIndex == 0) {
+						that.chooseWxImage('album')//c
+					} else if (res.tapIndex == 1) {
+						that.chooseWxImage('camera')//照相机
+					}
+				}
+			})
+		}else{
+			this.fail_use()
+		}
+  },
+  chooseWxImage: function (type) {
+    wx.chooseImage({//图片
+      sizeType: ['compressed'],
+      sourceType: [type],
+      success: function (res) {
+      
+        var tempFilePaths = res.tempFilePaths;
+         that.setData({
+           images: that.data.images.concat(tempFilePaths)
+         });
+      },
+      fail: function (resc) {
+      }
+    })
+
+
+  },
+  previewImage: function (e) {
+    // 预览图集
+    // var that = this;
+    var current = e.target.dataset.src;
+    console.log(current);
+    wx.previewImage({
+      current: current,
+      urls: that.data.images
+    });
+  },
+	//删除图片
+  delete: function (e) {
+    // var that =this;
+    var index = e.currentTarget.dataset.index;
+    var images = that.data.images;
+    images.splice(index, 1);
+    that.setData({
+      images: images
+    });
+  },
+
+  onChangeShowState: function () {
+    var that = this;
+
+  },
+//开始装车
+  loadingDateTap: function () {
+    var me = this;
+    if (me.data.enableModifyLoadingDate) {
+      me.setData({
+        'loadingDate': ''
+      });
+      me.datetimePicker.setPicker('loadingDate');
+    }
+  },
+//结束装车
+  loadingDateEndTap: function () {
+    var me = this;
+    if (me.data.enableModifyLoadingDateEnd) {
+      me.setData({
+        'loadingDateEnd': ''
+      });
+      me.datetimePicker.setPicker('loadingDateEnd');
+    }
+  },
+
+  /**
+ * 弹窗 --------------------------
+ */
+  showDialogBtn: function () {
+    // 调用函数时，传入new Date()参数，返回值是日期和时间  
+    var time = formatTime.formatTime(new Date());
+    // 再通过setData更改Page()里面的data，动态更新页面的数据  
+
+    this.setData({
+      showModal: true,
+      time: time
+    })
+
+  },
+  /**
+   * 弹出框蒙层截断touchmove事件
+   */
+  preventTouchMove: function () {
+  },
+  /**
+   * 隐藏模态对话框
+   */
+  hideModal: function () {
+    this.setData({
+      showModal: false
+    });
+  }
+})

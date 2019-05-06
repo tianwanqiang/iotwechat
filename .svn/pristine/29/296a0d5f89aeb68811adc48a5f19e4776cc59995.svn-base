@@ -1,0 +1,112 @@
+// var auth_conf = require('../../utils/auth.js');
+const app = getApp();
+Page({
+  data: {
+    enableOperate: true, //权限控制，用户需要先绑定
+    rolename: "",
+    navs: [{
+      text: '设备状态管理', //background:#673AB7;
+      ys: "iconfont icon-alarn",
+      styles: "font-size:60rpx; color:#fff; width:99.5%; height:95%;"
+    },
+    {
+      text: '数据看板', //background:#03a9f4;
+      ys: "iconfont icon-board",
+      styles: "font-size:60rpx; color:#fff;  width:99%; height:92%;"
+    }, {
+      text: '设备基本信息', //background:#03a9f4;
+      ys: "iconfont icon-elelock",
+      styles: "font-size:60rpx; color:#fff;  width:97%; height:86%;"
+    },
+    {
+      text: '报警记录', //background:#03a9f4;
+      ys: "iconfont icon-log",
+      styles: "font-size:60rpx; color:#fff;  width:97%; height:92%;"
+    },
+    {
+      text: '轨迹查询', //background:#03a9f4;
+      ys: "iconfont icon-locus",
+      styles: "font-size:60rpx; color:#fff;  width:97%; height:92%;"
+    }
+
+    ]
+  },
+
+  onLoad: function () {
+
+  },
+  onShow: function () {
+    var openid = wx.getStorageSync("openid");
+    var isLogin = wx.getStorageSync('login');
+    const that = this;
+    if (openid) {
+      
+      if (isLogin == "true") {
+        that.setData({
+          enableOperate: true
+        })
+      } else {
+        that.setData({
+          enableOperate: false
+        })
+      }
+
+    } else {
+      that.setData({
+        enableOperate: false
+      })
+    }
+  },
+  takeAction: function (e) {
+    var btn_type = e.currentTarget.dataset.type
+    if (btn_type == '设备状态管理' && this.data.enableOperate) {
+      wx.navigateTo({
+        url: './dealWarn/dealWarn',
+      })
+    } else if (btn_type == '报警记录' && this.data.enableOperate) {
+      wx.navigateTo({
+        url: './elecLockOperLog/elecLockOperLog',
+      })
+    } else if (btn_type == '设备基本信息' && this.data.enableOperate) {
+      this.tipMsg('该功能尚未开放!');
+      // wx.navigateTo({
+      //   url: './elecLocks/elecLocks',
+      // })
+      //报警处理，电子锁记录查询，订单轨迹，电子锁开锁这几个功能
+    } else if (btn_type == '轨迹查询' && this.data.enableOperate) {
+      this.tipMsg('该功能尚未开放!');
+      // wx.navigateTo({
+      //   url: './trackQuery/trackQuery',
+      // })
+    } else if (btn_type == '数据看板' && this.data.enableOperate) {
+      this.tipMsg('该功能尚未开放!');
+      // let openid = wx.getStorageSync('openid');
+      // console.log(openid)
+      // wx.navigateToMiniProgram({
+      //   appId: 'wxa3dc88161abce04f',
+      //   path: '',
+      //   extraData: {
+      //     oppenid: openid
+      //   },
+      //   envVersion: 'release',
+      //   success(res) {
+      //     // 打开成功
+      //   }
+      // })
+    } else if (!this.data.enableOperate) {
+       this.tipMsg('请先登录！');
+    }
+
+  },
+  tipMsg: function (msg) {
+    wx.showToast({
+      title: msg,
+      icon: 'none',
+      duration: 3000
+    });
+  }
+}
+
+
+
+)

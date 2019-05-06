@@ -1,0 +1,94 @@
+<view style=' color:#405f80;height:{{systemHeight}}px;font-size: 15px;'>
+ <view class='search'>
+ <input class="text_center" bindinput="carNoInput" value='{{platNo}}' placeholder='车牌号(设备号)'></input>
+ <!-- <button class="btn split" bindtap='ensureParam'>确定</button> -->
+ </view>
+ <view class="top">
+    <view class="title"><label  for="checkOne" class="lbl">今天</label> <switch  checked="{{today}}"   bindchange='checkOne' color='#405f80'></switch></view>
+    
+    <view class="title"> <label  for="checkTwo" class="lbl">昨天</label>   <switch checked="{{twoday}}" bindchange='checkTwo' color='#405f80'></switch></view>
+   
+    <view class="title"><label  for="checkThr" class="lbl">三天内</label>   <switch checked="{{thrday}}"  bindchange='checkThr' color='#405f80'></switch></view>
+   
+    <view class="title"><label  for="checkCus" class="lbl">自定义</label>  <switch checked="{{custom}}"  bindchange='checkCus' color='#405f80' ></switch></view>
+   
+ </view>
+ <view class="mid" hidden='{{!custom}}'>
+ 
+<view class="tarInput">
+  <label>开始时间：</label><text>{{startDate}}</text>
+    <modal   class="modal" hidden="{{flag}}"  no-cancel bindconfirm="getTime" confirmText="确定">
+    <view class="modal-content">
+<view class="time_screens" >
+  <view style="text-align:center;color:#45BCE8">{{year}}-{{month}}-{{day}} {{hour}}:{{minute}}</view>
+  <view style="border-top:1px solid #45BCE8;height:25px;font-size:14px;">
+  <view class="time-title">年</view>
+  <view class="time-title">月</view>
+  <view class="time-title">日</view>
+  <view class="time-title">时</view>
+  <view class="time-title">分</view>
+  </view>
+  <picker-view indicator-style="height: 50px;" style="width: 100%; height: 300px;" value="{{beginValue}}" bindchange="bindChange">
+    <picker-view-column class="picker-text">
+      <view wx:for="{{years}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+    <picker-view-column class="picker-text">
+      <view wx:for="{{months}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+    <picker-view-column class="picker-text">
+      <view wx:for="{{days}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+     <picker-view-column class="picker-text">
+      <view wx:for="{{hours}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+     <picker-view-column class="picker-text">
+      <view wx:for="{{minutes}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+  </picker-view>
+</view>
+</view>
+  </modal>
+  </view>
+  <button bindtap="checkViewStart" class='btn'>选择开始时间</button>
+
+  <view class="tarInput">
+  <label>结束时间：</label><text>{{endDate}}</text>
+    <modal   class="modal" hidden="{{flagEnd}}"  no-cancel bindconfirm="getTimeEnd" confirmText="确定">
+    <view class="modal-content">
+<view class="time_screens" >
+  <view style="text-align:center;color:#45BCE8">{{yeare}}-{{monthe}}-{{daye}} {{houre}}:{{minutee}}</view>
+  <view style="border-top:1px solid #45BCE8;height:25px;font-size:14px;">
+  <view class="time-title">年</view>
+  <view class="time-title">月</view>
+  <view class="time-title">日</view>
+  <view class="time-title">时</view>
+  <view class="time-title">分</view>
+  </view>
+  <picker-view indicator-style="height: 50px;" style="width: 100%; height: 300px;" value="{{value}}" bindchange="bindChangeEnd">
+    <picker-view-column class="picker-text">
+      <view wx:for="{{years}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+    <picker-view-column class="picker-text">
+      <view wx:for="{{months}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+    <picker-view-column class="picker-text">
+      <view wx:for="{{days}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+     <picker-view-column class="picker-text">
+      <view wx:for="{{hours}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+     <picker-view-column class="picker-text">
+      <view wx:for="{{minutes}}" style="line-height: 50px">{{item}}</view>
+    </picker-view-column>
+  </picker-view>
+</view>
+</view>
+  </modal>
+  </view>
+  <button bindtap='checkViewEnd' class="btn">选择结束时间</button>
+ </view>
+ <view class="bottom">
+ <!-- button-3d button-primary button-rounded -->
+ <button class='button btn-block btn-blue  common_button' bindtap='ensureParam'>查询</button>
+ </view>
+</view>

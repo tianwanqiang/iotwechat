@@ -1,0 +1,36 @@
+<view class="container">
+  <!-- <map id="maps" longitude="{{longitude}}" latitude="{{latitude}}"  controls="{{controls}}" bindcontroltap="controltap" bindmarkertap="markertap"  show-location style='width:100%;height:{{deviceH}}px'> -->
+  <map id="trackMap" longitude="{{longitude}}" latitude="{{latitude}}" scale="{{scale}}"  markers="{{markers}}" bindregionchange="makertap" style='width:100%;height:{{deviceH}}px' polyline="{{polyline}}" 	>
+
+    <!-- <cover-view class="map_text">
+
+      <cover-view class="classname_1">
+
+        <cover-view class="classname_2">{{platNo}} </cover-view>
+        <cover-view class="classname_2">{{gpsTime}}</cover-view>
+        <cover-view class="classname_2">{{speed}}</cover-view>
+
+
+      </cover-view>
+      <cover-view class="classname_1">
+       <cover-view>{{location}}</cover-view>
+      </cover-view>
+    </cover-view> -->
+  </map>
+</view>
+ <view class="map_text">
+      <view class="classname_1">
+        <view class="classname_2">{{platNo}} </view>
+        <view class="classname_2">{{gpsTime}}</view>
+        <view class="classname_2">{{speed}}</view>
+      </view>
+      <view class="classname_1">
+       <view>{{location}}</view>
+      </view>
+    </view>
+<view class="bottom">
+ <button class='button btn-block btn-blue  common_button' bindtap='playTrack' loading='{{playFlag==1}}'>播放</button>
+ <button class='button btn-block btn-blue  common_button' bindtap='searchTab'>查询</button>
+ <!-- <view class="btn" bindtap='playTrack'>  <image src="{{playImg}}" mode="widthFix"  class="{{className}}" /></view>
+ <view class="btn"  bindtap='searchTab'> <image src="../../../../Image/Search.png" mode="widthFix" style='width:32px;height:32px' /></view> -->
+</view>

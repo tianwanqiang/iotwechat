@@ -1,0 +1,32 @@
+function sessionExpire(){
+  wx.showModal({
+    title: '提示',
+    content: '登录过期,请重新登陆',
+    showCancel: false,
+  })
+}
+
+
+function showToast(msg){
+  wx.showToast({
+    title: msg,
+    icon: 'none',
+    duration: 3000
+  });
+}
+
+function showLoading(msg){
+  wx.showLoading({
+    title: msg,
+  })
+}
+
+function hideLoading(msg) {
+  wx.hideLoading({
+    title: msg,
+  })
+}
+module.exports.sessionExpire = sessionExpire;
+module.exports.hideLoading = hideLoading;
+module.exports.showLoading = showLoading; 
+module.exports.showToast = showToast; 

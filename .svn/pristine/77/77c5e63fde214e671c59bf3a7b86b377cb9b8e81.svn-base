@@ -1,0 +1,5 @@
+{
+  "onReachBottomDistance": 1,
+  "enablePullDownRefresh": true,
+  "navigationBarTitleText": "实时位置"
+}

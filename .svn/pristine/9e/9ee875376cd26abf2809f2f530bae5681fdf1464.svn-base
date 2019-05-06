@@ -1,0 +1,5 @@
+{
+  "enablePullDownRefresh": true,
+  "navigationBarTitleText": "设备状态",
+  "onReachBottomDistance":300
+}

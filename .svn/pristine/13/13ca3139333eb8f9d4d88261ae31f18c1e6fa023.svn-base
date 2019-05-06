@@ -1,0 +1,5 @@
+{
+  "enablePullDownRefresh": true,
+  "navigationBarTitleText": "报警处理",
+  "onReachBottomDistance":300
+}

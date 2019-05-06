@@ -1,0 +1,456 @@
+var auth_conf = require('../../utils/auth.js');
+var app = getApp();
+var that;
+Page({
+  data: {
+    departmentIndex: 0,
+    exception1Index: 0,
+    exception2Index: 0,
+    exceptionDesc: '',
+    feedbackPerson: '',
+    signo: '',
+    signos: [],
+    signoText: '',
+    departmentCodes: [],
+    departmentNames: [],
+    exception1Codes: [],
+    exception1Names: [],
+    exception2Codes: [],
+    exception2Names: [],
+    navs: [
+      {
+        text: '上传',
+        style: "width:120px;",
+        ys: "iconfont icon-shangchuan",
+        styles: "font-size:32px;color:#3bb4f2;",
+        key: "scanCode"
+      }, {
+        text: '拍照',
+        style: "width:120px;",
+        ys: "iconfont icon-paizhao",
+        styles: "color:red;font-size:24px;",
+        key: "exception"
+      }
+    ],
+    array: [
+      { name: 'Normal', value: '正常', checked: 'true' },
+      { name: 'Exception', value: '异常' },
+    ],
+    images: [],
+    imageWidth: 190,
+    spanStyle: "iconfont icon-CombinedShape;color:red;font-size:18px;padding-left:73px;",
+    col: "width: 40%;background-color:#3bb4f2; color:#fff; position: fixed;bottom: 20px; left:30%; border-radius: 30px; border:none;"
+  },
+  /**反馈部门选择 */
+  departmentBindchange: function (e) {
+    this.setData({
+      departmentIndex: e.detail.value
+    })
+  },
+  exception1Bindchange: function (e) {
+		if(e.detail.value !==1){
+			this.setData({
+				exception1Index: e.detail.value
+			});
+		}
+    if (e.detail.value == 0) {
+      return;
+    }
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_getExceptionTypeOrDepartment',
+      method: "POST",
+      data: { parentExceptionId: this.data.exception1Codes[e.detail.value] },
+      success: function (datas) {
+        var array = datas.data.data.data.exceptionType;
+        if (array.length == 0) {
+          return;
+        }
+        var exception2Codes = [];
+        var exception2Names = [];
+        exception2Names.push('请选择');
+        exception2Codes.push(0);
+        for (var i in array) {
+          exception2Codes.push(array[i].basExceptionTypeId);
+          exception2Names.push(array[i].exceptionName);
+        }
+        that.setData({
+          exception2Codes: exception2Codes,
+          exception2Names: exception2Names
+        });
+      }
+    })
+  },
+  exception2Bindchange: function (e) {
+		if(e.detail.value !== 0){
+			this.setData({
+				exception2Index: e.detail.value
+			})
+		}
+  },
+  /**
+   * 下面是监听input text 数据
+   */
+  signoBindinput: function (e) {//签收单号
+    this.data.signo = e.detail.value
+  },
+  exceptionDescBindinput: function (e) {//异常描述
+    this.data.exceptionDesc = e.detail.value;
+  },
+  feedbackPersonBindinput: function (e) {//反馈人
+    this.data.feedbackPerson = e.detail.value
+  },
+  dealWithDepartment: function (json) {
+    var departmentCodes = [];
+    var departmentNames = [];
+    departmentNames.push('请选择');
+    departmentCodes.push(0);
+    for (var key in json) {
+      departmentNames.push(json[key]);
+      departmentCodes.push(key);
+    }
+    that.setData({
+      departmentNames: departmentNames,
+      departmentCodes: departmentCodes
+    });
+  },
+  dealWithException1s: function (array) {
+    if (array.length == 0) {
+      return;
+    }
+    var exception1Codes = [];
+    var exception1Names = [];
+    exception1Names.push('请选择');
+    exception1Codes.push(0);
+    for (var i in array) {
+      exception1Codes.push(array[i].basExceptionTypeId);
+      exception1Names.push(array[i].exceptionName);
+    }
+    that.setData({
+      exception1Codes: exception1Codes,
+      exception1Names: exception1Names
+    });
+  },
+  //初始化表单
+  initForm: function () {
+    that.setData({
+      images: [],
+      departmentIndex: 0,
+      exception1Index: 0,
+      exception2Index: 0,
+      exceptionDesc: '',
+      feedbackPerson: '',
+      signo: '',
+      signoText: '没有数据',
+      signos: []
+    });
+  },
+  /**
+   * 判断该签收单号是否已经存在
+   */
+  checkSignosExist: function (signo) {
+    var array = that.data.signos;
+    if (array.length == 0) {
+      return false;
+    }
+    for (var i = 0; i < array.length; i++) {
+      if (signo == array[i]) {
+        return true;
+      }
+    }
+    return false;
+  },
+	fail_use: auth_conf.fail_use,
+  //点击搜索
+  doSearch: function () {
+		//console.log(auth_conf)
+		//console.log(auth_conf.abnormalSearch)
+		if (wx.getStorageSync('authority').abnormal.abnormalSearch == 1) {
+			that = this;
+			var no = this.data.signo;
+			if (no == undefined) {
+				wx.showModal({
+					title: '输入签收单号不能为空',
+					content: '',
+					showCancel: false
+				});
+				return;
+				return;
+			} else {
+				if (this.checkSignosExist(no)) {
+					wx.showModal({
+						title: '签收单号' + no + ',已经存在!',
+						content: '',
+						showCancel: false
+					});
+					return;
+				}
+				wx.request({
+					url: app.getBaseUrl() + 'service/wechat_checkSignoIsExist',
+					method: "POST",
+					data: { signo: no },
+					success: function (e) {
+						if (e.data.data.isSuccess == 'N') {
+							wx.showToast({
+								title: e.data.data.data,//'单号不存在或失效',
+								icon: 'none',
+								duration: 3000
+							});
+							that.setData({
+								signo: ''
+							})
+						} else {
+							var signos = that.data.signos;
+							signos.push(e.data.data.data.signNo);
+							that.setData({
+								signoText: signos.join(','),
+								signos: signos
+							});
+						}
+					}
+				})
+			}
+		} else {
+			console.log('失败--未登录')
+			this.fail_use()
+		}
+    
+  },
+  //扫码
+  doScanCode: function () {
+    that = this;
+    wx.scanCode({
+      success: function (result) {
+        var no = result.result;
+        if (no == undefined) {
+          wx.showModal({
+            title: '输入签收单号不能为空',
+            content: '',
+            showCancel: false
+          });
+          return;
+        }
+        if (that.checkSignosExist(no)) {
+          wx.showModal({
+            title: '签收单号' + no + ',已经存在!',
+            content: '',
+            showCancel: false
+          });
+          return;
+        }
+        wx.request({
+          url: app.getBaseUrl() + 'service/wechat_checkSignoIsExist',
+          method: "POST",
+          data: { signo: no },
+          success: function (e) {
+            if (e.data.data.isSuccess == 'N') {
+              wx.showToast({
+                title: e.data.data.data,//'单号不存在或失效',
+                icon: 'none',
+               duration: 3000
+              });
+            } else {
+              var signos = that.data.signos;
+              signos.push(e.data.data.data.signNo);
+              that.setData({
+                signoText: signos.join(','),
+                signos: signos
+              });
+            }
+            //that.doScanCode();//支持连续扫描
+          }
+        });
+      },
+    })
+  },
+
+  onLoad: function (option) {
+    that = this;
+    this.initForm();
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_getExceptionTypeOrDepartment',
+      method: "POST",
+      data: { test: 1 },
+      success: function (e) {
+        that.dealWithDepartment(e.data.data.data.departments[0]);
+        that.dealWithException1s(e.data.data.data.exceptionType);
+      }
+    });
+  },
+
+  uploadBindtap: function (e) {
+    if (e.currentTarget.dataset.type == '上传') {//此处是上传功能
+			if (wx.getStorageSync('authority').abnormal.abnormalUpload == 1) {
+				
+				this.submit();
+			} else {
+				this.fail_use()
+			}
+    } else {
+			if (wx.getStorageSync('authority').abnormal.abnormalCamara == 1) {
+				wx.showActionSheet({
+					itemList: ['从相册中选择', '拍照'],
+					itemColor: "#CED63A",
+					success: function (res) {
+						if (res.tapIndex == 0) {
+							that.chooseWxImage('album')//c
+						} else if (res.tapIndex == 1) {
+							that.chooseWxImage('camera')//照相机
+						}
+					}
+				})
+			} else {
+				this.fail_use()
+			}
+      
+    }
+  },
+  chooseWxImage: function (type) {
+    wx.chooseImage({//图片
+      //sizeType: ['compressed'],
+      sourceType: [type],
+      success: function (res) {
+        var foreightNo_uv = that.data.foreightNo;
+        var tempFilePaths = res.tempFilePaths;
+        console.log(tempFilePaths);
+        that.setData({
+          images: that.data.images.concat(tempFilePaths)
+        });
+      },
+      fail: function (resc) {
+      }
+    })
+  },
+  previewImage: function (e) {
+    // 预览图集
+    // var that = this;
+    var current = e.target.dataset.src;
+    wx.previewImage({
+      current: current,
+      urls: that.data.images
+    });
+  },
+  deleteImage: function (e) {
+    // var that =this;
+    var index = e.currentTarget.dataset.index;
+    var images = that.data.images;
+    images.splice(index, 1);
+    that.setData({
+      images: images
+    });
+  },
+  checkIsNotNull: function (value, message) {
+    if (value == undefined || value == '' || value == '0') {
+      wx.showToast({
+        title: message,
+        icon: 'none',
+        duration: 3000,
+      });
+      return false;
+    }
+    return true;
+  },
+  submit: function () {
+    that = this;
+    if (!this.checkIsNotNull(this.data.signos, '请输入或扫描单号')) {
+      return;
+    }
+    if (!this.checkIsNotNull(this.data.feedbackPerson, '请输入反馈人')) {
+      return;
+    }
+    if (!this.checkIsNotNull(this.data.departmentIndex, '请选择反馈部门')) {
+      return;
+    }
+    if (!this.checkIsNotNull(this.data.exception1Index, '请选择一级异常')) {
+      return;
+    }
+    if (!this.checkIsNotNull(this.data.exception2Index, '请选择二级异常')) {
+      return;
+    }
+    if (!this.checkIsNotNull(this.data.exceptionDesc, '请输入异常原因')) {
+      return;
+    }
+    var departmentCode = this.data.departmentCodes[this.data.departmentIndex].trim();//反馈部门编号
+    var departmentName = this.data.departmentNames[this.data.departmentIndex].trim();//反馈部门名称
+    var exception1Code = this.data.exception1Codes[this.data.exception1Index].trim();//一级异常id
+    var exception1Name = this.data.exception1Names[this.data.exception1Index].trim();//一级异常
+    var exception2Code = this.data.exception2Codes[this.data.exception2Index].trim();//2级异常id
+    var exception2Name = this.data.exception2Names[this.data.exception2Index].trim();//2级异常
+    var tempFilePaths = this.data.images;
+    var imageCount = tempFilePaths.length;
+    if (imageCount == 0) {
+      wx.showToast({
+        title: '请添加照片',
+        icon: 'none',
+        duration: 3000,
+      })
+    } else {
+      wx.showLoading({
+        title: '上传中..',
+      });
+      var parameter = {
+        'departmentCode': departmentCode,
+        'departmentName': departmentName,
+        'exception1Code': exception1Code,
+        'exception1Name': exception1Name,
+        'exception2Code': exception2Code,
+        'exception2Name': exception2Name,
+        'imageCount': imageCount,
+        'signNos': this.data.signoText,
+        'feedbackPerson': this.data.feedbackPerson,
+        'exceptionDesc': this.data.exceptionDesc
+      };
+      that.toUploadFile(tempFilePaths, parameter);
+    }
+  },
+  toUploadFile: function (tempFilePaths, parameter) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_saveCargoException',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: parameter,
+      success: function (c) {
+        console.log(c);
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') {//上传成功
+          tempFilePaths.splice(0, 1);
+          parameter.imageCount = tempFilePaths.length;
+          if (parameter.attachmentsIds) {
+            parameter.attachmentsIds = parameter.attachmentsIds + ',' + v_obj.data;//上传的文件名称
+          } else {
+            console.log(v_obj.data);
+            parameter.attachmentsIds = v_obj.data;//上传的文件名称
+          }
+          if (parameter.imageCount == 0) {//当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function () {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({ delta: 1 });
+              }
+            }, 2000);
+          } else {
+            that.toUploadFile(tempFilePaths, parameter);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  }
+
+})

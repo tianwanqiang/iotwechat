@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "coverView":"../../../../component/coverView"
+  },
+  "title":"轨迹回放"
+}

@@ -1,0 +1,31 @@
+/* pages/tms/trackQuery/searchItem/searchPage.wxss */
+page{
+   display: flex;
+  flex-direction: column;
+  height: 100%;
+  background:linear-gradient(to left,#cacaed, #c7d3ff, #ebf8fd);
+
+}
+
+.hidden{
+  display: none;
+}
+
+.bottomView{
+ position:fixed;
+ bottom:0;
+ text-align:center;
+ display:flex;
+ justify-content:center;
+ width:100%;
+
+}
+.bottomView image{
+  width: 84rpx;
+  height: 50rpx;
+  margin-bottom: 20rpx;
+}
+.page__bd{
+  margin-bottom: 80rpx;
+}
+

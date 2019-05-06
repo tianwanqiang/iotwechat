@@ -1,0 +1,44 @@
+function sessionExpire(){
+  wx.removeStorageSync("userinfo");
+  wx.removeStorageSync("appkey");
+  wx.removeStorageSync("openid");
+  wx.setStorageSync("login", "false");
+  wx.showToast({
+    title: '登录过期',
+    icon: 'none',
+    duration: 3000
+  })
+}
+
+function showModal(msg){
+  wx.showModal({
+    title: '提示',
+    content: msg,
+    showCancel: false,
+  })
+}
+
+function showToast(msg){
+  wx.showToast({
+    title: msg,
+    icon: 'none',
+    duration: 3000
+  });
+}
+
+function showLoading(msg){
+  wx.showLoading({
+    title: msg,
+  })
+}
+
+function hideLoading(msg) {
+  wx.hideLoading({
+    title: msg,
+  })
+}
+module.exports.sessionExpire = sessionExpire;
+module.exports.hideLoading = hideLoading;
+module.exports.showLoading = showLoading; 
+module.exports.showToast = showToast; 
+module.exports.showModal = showModal;

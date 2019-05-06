@@ -1,0 +1,4 @@
+<web-view src="{{sourceurl}}" style='height:{{systemHeight}}'></web-view>
+<view>
+  <button class='button btn-block btn-blue common_button' bindtap='searchTab'>查询</button>
+</view>

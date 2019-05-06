@@ -1,0 +1,30 @@
+<view class="bg-b"></view>
+<view class="weui-cells weui-cells_after-title cell_font_size">
+  <view class="weui-cell">
+    <view class="weui-cell__bd">设备编号：</view>
+    <view class="weui-cell__ft">{{deviceCode}}</view>
+  </view>
+  <view class="weui-cell">
+    <view class="weui-cell__bd">采集时间：</view>
+    <view class="weui-cell__ft">{{gpsTime}}</view>
+  </view>
+  <view class="weui-cell">
+    <view class="weui-cell__bd">地点：</view>
+    <view class="weui-cell__ft">{{location}}</view>
+  </view>
+  <view class="weui-cell">
+    <view class="weui-cell__bd">速度：</view>
+    <view class="weui-cell__ft">{{speed}}</view>
+  </view>
+  <view class="weui-cell">
+    <view class="weui-cell__bd">方向：</view>
+    <view class="weui-cell__ft">{{direction}}</view>
+  </view>
+  <view class="weui-cell">
+    <view class="weui-cell__bd">状态：</view>
+    <view class="weui-cell__ft">{{status}}</view>
+  </view>
+</view>
+<view>
+ <button class='button btn-block btn-blue  common_button' bindtap='setDeivceParam'>设备参数设置</button>
+</view>

@@ -1,0 +1,41 @@
+
+<view class="map_container">
+  <map id="map" class="maps" longitude="{{currentLo}}" latitude="{{currentLa}}" scale="{{scale}}" markers="{{markers}}" polyline="{{polyline}}" title="{{titles}}" include-points="{{includePoints}}"  callout="{{callouts}}">
+   <cover-view class="iconSty" bindtap='jumpMap'>
+    <cover-image src='../../../../Image/tab/sx_1.png'></cover-image>
+  </cover-view> 
+   <cover-view class="map_text" >
+    <cover-view class="classname">
+    <cover-view class="classname_1">
+      <cover-view  class='labcss'>
+        <cover-view >设备号：{{deviceCode}} </cover-view>
+      </cover-view>
+        <cover-view class='valCss'>
+         <cover-view >状态：{{status}}</cover-view>
+        </cover-view>
+    </cover-view>
+    <cover-view class="classname_1">
+      <cover-view class='labcss' >
+        <cover-view >速度：{{speed}}Km/h</cover-view>
+      </cover-view>
+      <cover-view  class='valCss'>
+        <cover-view >定位：{{positioningType}}</cover-view>
+      </cover-view>
+    </cover-view>
+    <cover-view class="classname_1">
+        <cover-view  class='labcss'>
+         <cover-view >时间：{{gpsTime}}</cover-view>
+        </cover-view>
+        <cover-view class='valCss'>
+        <cover-view >电量：{{electricity}}</cover-view>
+      </cover-view>
+    </cover-view> 
+     <cover-view class="classname_1">
+      <cover-view style="width:100%;font-size: 14px;font-family: Microsoft YaHei;color: #fff;">
+        <cover-view style="width:100%">地址：{{location}}</cover-view>
+      </cover-view>
+    </cover-view>
+  </cover-view>
+  </cover-view>
+  </map>
+</view>

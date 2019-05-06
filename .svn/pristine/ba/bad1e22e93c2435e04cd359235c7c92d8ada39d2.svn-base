@@ -1,0 +1,17 @@
+<!--wxml是骨架文件-->
+<view class='containerView'>
+  <!-- <image class='user-avatar' src='/Image/logo.png'></image> -->
+	<image class='user-avatar' src='https://lg-a3mn5gju-1257119824.cos.ap-shanghai.myqcloud.com/logo.png'></image>
+  <text class='user-name'>{{userinfo.trueName}}</text>
+  <!-- <text class='user-sign'>操作环境：{{os}}</text> -->
+  <text class='user-sign'>{{userinfo.sysOrgName}}</text>
+  <!-- <text class='user-sign'>角色：{{userinfo.roleName}}</text> -->
+  <text class='user-sign'>{{userinfo.email}}</text>
+  <view class="btn-submit">
+    <button class="btn-block btn-blue" bindtap="bindUserInfo" disabled="{{!enableBind}}">{{btnText}}</button>
+  </view>
+
+   <view class="btn-submit">
+    <button class="btn-block btn-blue" bindtap="bindUserInfo" disabled="{{!enableBind}}">{{btnText}}</button>
+  </view>
+</view>

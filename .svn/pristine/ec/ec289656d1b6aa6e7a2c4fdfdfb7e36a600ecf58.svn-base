@@ -1,0 +1,73 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="userNameInput" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入单号或扫码" value="{{val}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="jumpToMyPage_sousuo"></text>
+      <text class="iconfont icon-saomiao" bindtap="jumpToMyPage_saomiao"></text>
+    </view>
+  </view>
+</view>
+
+<view class="{{showView?'bright789_view_show':'bright789_view_hide'}}">
+  <view class="container_name">
+
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">配载单号：{{attemperNo}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">司机：{{driver}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;"> 车牌：{{vehicleNo}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;" bindtap='loadingDateTap'>开始装车：{{loadingDate}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;" bindtap='loadingDateEndTap'>结束装车：{{loadingDateEnd}} </view>
+    </span>
+     <view style="margin-top:15px; width:100%;">
+       <span class="section__title">装车货台：</span> 
+       <span style="float:right; background:#FFFFFF;width:60%; text-align:center; padding:5px 10px;border-radius:5px;font-family:Microsoft YaHei;">
+        <picker value="{{picker1Value}}" range="{{picker1Range}}" bindchange="normalPickerBindchange" disabled='{{!enableModifyLoadPlatform}}'>
+           <span class="picker">{{picker1Range[picker1Value]}}</span>
+      </picker>
+      </span>
+    </view> 
+    
+     
+    <span  style="font-size:14px;font-family:Microsoft YaHei;margin-top:15px;background-color:#FFFFFF" >
+      <textarea style="height:40px;border:1px solid #FFFFFF;" placeholder="备注" bindinput="inputRemark" value="{{val_detial}}" maxlength="300" />
+    </span>
+  </view>
+
+  <view style="margin-top:10px; width:100%;display:flex;flex-wrap:wrap;">
+    <view class="btn-list">
+      <span class="iconfont icon-shangchuan" bindtap="upload_prcture"></span>
+      <text>{{showTab?'上传':'上传'}}</text>
+    </view>
+    <view class="btn-list">
+      <span class="iconfont icon-paizhao" bindtap="photo_prcture"></span>
+      <text>拍照{{auth_conf.can_use1 }}</text>
+    </view>
+  </view>
+
+ 
+
+  <!--图片展示-->
+  <view class="gallery">
+    <view class="item" wx:for="{{images}}" wx:key="">
+      <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx; border:#ddd 1px solid; padding:1px;" src=" {{item}}" data-src="{{item}}" bindtap="previewImage" mode="aspectFill" />
+      <!-- 删除按钮 -->
+      <view class="delete" bindtap="delete" data-index="{{index}}">
+        <!-- <image src="http://www.icosky.com/icon/thumbnails/Application/asp.net/delete%20Icon.jpg" /></view> -->
+        <span style="{{spanStyle}};left: {{imageWidth / 2 - 26}}px;">X</span>
+      </view>
+    </view>
+    <view class="item">
+      <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx" src="" class="button-upload" bindtap="chooseImage" />
+    </view>
+  </view>
+</view>
+<!-- <view bindtap='shuju'>数据可视化</view> -->
+<include src="../tools/wxml/picker_datetime.wxml" />

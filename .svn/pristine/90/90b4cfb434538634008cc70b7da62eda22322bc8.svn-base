@@ -1,0 +1,154 @@
+var app = getApp();
+Page({
+  data: {
+    enableBind: false,
+    refresh: false,
+    os: '未知',
+    btnText: "加载中",
+    userinfo: {
+      userId: "",
+      userName: "游客",
+      officeName: "没有登陆或注册的人",
+      roleName: "未知",
+      userCode: "未知"
+    }
+  },
+
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+    this.setData({ refresh: true });
+    var openid = wx.getStorageSync("openid");
+    if (!openid) {
+      this.initOpenId();//初始化openid
+      openid = wx.getStorageSync("openid");
+    }
+    const that = this;
+    wx.request({
+      url: app.getBaseUrl() + 'system/service/Wechat_alleadyBindOpenId',
+      method: "POST",
+      data: {openid: openid},
+      success: function (e) {
+        if (e.data.data==undefined) {
+          //如果没查到，立即绑定用户到系统
+          that.setData({
+            enableBind: true,
+            btnText: "立即绑定"
+          })
+        } else {
+          that.setData({
+            userinfo: e.data.data,
+            enableBind: true,
+            btnText: "解除绑定"
+          });
+          wx.setStorageSync("login", "true");
+        }
+      },
+      fail: function (err) {
+        console.log(err);
+        wx.showToast({
+          title: err.errMsg,
+          icon: 'none',
+          duration: 3000
+        });
+        that.setData({
+          btnText: '网络异常'
+        })
+      }
+    });
+  },
+
+  initOpenId: function () {
+    var that = this;
+    wx.login({
+      success: function (res) {
+        wx.request({
+          url: app.getBaseUrl() + 'system/service/Wechat_GetOpenId',
+          data: {
+            code: res.code
+          },
+          method: "POST",
+          success: function (res) {
+            console.log(res);
+            if (res.data.isSuccess == 'N') {
+              wx.showToast({
+                title: '读取服务器信息错误!', icon: 'none', duration: 3000
+              });
+            } else {
+              var openid = res.data.data;//获取到的openid
+              wx.setStorageSync("openid", openid);
+            }
+          }
+        })
+      }
+    })
+  },
+  bindUserInfo: function () {
+    if (this.data.btnText == '立即绑定') {
+      wx.navigateTo({
+        url: 'userinfo/userinfo',
+      })
+    } else {
+
+      const that = this;
+      wx.showModal({
+        title: '消息',
+        content: '确定解除绑定吗？解除绑定后，部分业务功能将不可操作。',
+        confirmColor: '#405f80',
+        success: function (res) {
+          if (res.confirm) {
+            wx.request({
+              url: app.getBaseUrl() + 'system/service/Wechat_unBindUser',
+              method: "POST",
+              data: {
+                userId: that.data.userinfo.sysUserId
+              },
+              success: function (e) {
+                if (e.data.data.isSuccess == 'N') {
+                  wx.showToast({
+                    title: e.data.data.data, icon: 'none', duration: 3000
+                  });
+                } else {
+                  wx.showToast({
+                    title: '解除绑定成功！', icon: 'none', duration: 3000
+                  });
+                  var user = e.data.data.data;
+                  that.setData({
+                    btnText: "立即绑定",
+                    userinfo: {
+                      userId: "",
+                      userName: "游客",
+                      officeName: "没有登陆或注册的人",
+                      roleName: "未知",
+                      userCode: "未知"
+                    }
+                  });
+                  wx.setStorageSync("authority", { "abnormal": { "abnormalCamara": "0", "abnormalSearch": "0", "abnormalUpload": "0" }, "signFor": { "signForCamara": "0", "signForSearch": "0", "signForUpload": "10" }, "giveUnin": { "giveUninCar": "0", "giveSearch": "0" }, "arriveCar": { "arriveCarSearch": "0", "arriveCarUpload": "0", "arriveCarCamara": "0" }, "binding": { "bindingUpload": "0", "bindingSearch": "0", "unbinding": "0", "binding": "0" }, "loadingCar": { "loadingCamara": "0", "loadingSearch": "0", "loadingUpload": "0" }, "departCar": { "departUpload": "0", "departSearch": "0", "departCheckout": "0", "depart": "0" } }
+                  );
+                  wx.setStorageSync("login", "false");
+                }
+              }
+            });
+          }
+        }
+      })
+    }
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+    if (!this.data.refresh) {
+      this.onLoad();
+    }
+  },
+  /**
+   * 生命周期函数--监听页面隐藏
+   */
+  onHide: function () {
+    this.setData({ refresh: false });
+  }
+})

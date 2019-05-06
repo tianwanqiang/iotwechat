@@ -1,0 +1,699 @@
+var bmap = require('../../libs/bmap-wx.min.js');
+var wxMarkerData = [];  //定位成功回调对象  
+var longitude_s = '';   //经度  
+var latitude_s = '';    //纬度  
+var app = getApp();
+var foreightNo = '';
+var arr_old = '';
+var j;
+var that;
+var obj_arr = '';
+var auth_conf = require('../../utils/auth.js');
+//校验终端位置是否差距2公里
+function calculateDistance(that, callBack){
+  var attemperNo_uv = that.data.attemperNo;//配载单号
+  //这里添加校验2公里
+  wx.request({
+    url: app.getBaseUrl() + 'service/wechat_calculateDistance',
+    method: "POST",
+    data: {
+      attemperNo: attemperNo_uv
+    },
+    success: function (e) {
+      var resultData = e.data.data;
+      if (resultData.isSuccess === 'Y') {
+        if (resultData.data > 2) {
+          wx.showModal({
+            title: '',
+            content: '终端位置距离干线终点超出2公里，是否确认到车？',
+            success: function (res) {
+              if (res.confirm && typeof callBack == "function") {
+                callBack();//回调提交函数
+              }
+            }
+          });
+        }else{
+            callBack();//回调提交函数
+        }
+      } else {
+        wx.showModal({
+          title: '',
+          content: resultData.data,
+          success: function (res) {
+            if (res.confirm && typeof callBack == "function") {
+              callBack(that);//回调提交函数
+            }
+          }
+        });
+      }
+    }
+  });
+}
+Page({
+  data: {
+    picker1Value: 0,
+    picker1Range: [],
+    exception_remark: '',
+    markers: [],
+    longitude: '',   //经度  
+    latitude: '',    //纬度  
+    longitude_s: '',   //经度  
+    latitude_s: '',    //纬度  
+    address: '',     //地址  
+    cityInfo: {},     //城市信息  
+    navs: [
+      {
+        text: '上传',
+        style: "width:120px;",
+        ys: "iconfont icon-shangchuan",
+        styles: "font-size:32px;color:#3bb4f2;",
+        key: "scanCode"
+      }, {
+        text: '拍照',
+        style: "width:120px;",
+        ys: "iconfont icon-paizhao",
+        styles: "color:red;font-size:24px;",
+        key: "exception"
+      }
+
+    ],
+    array: [
+      { name: 'Normal', value: '正常', checked: 'true' },
+      { name: 'Exception', value: '异常' },
+    ],
+    images: [],
+    imageWidth: 190,
+    spanStyle: "iconfont icon-CombinedShape;color:red;font-size:18px;padding-left:73px;",
+    col: "width: 40%;background-color:#3bb4f2; color:#fff; position: fixed;bottom: 20px; left:30%; border-radius: 30px; border:none;",
+    showView: true,
+    showHiden: false,
+  },
+  onLoad: function () {
+    that = this;
+     // 新建bmap对象 
+    var BMap = new bmap.BMapWX({
+      // ak: that.data.ak
+      ak: app.getBMapAk()
+    });
+    var fail = function (data) {
+      console.log(data);
+    };
+    var success = function (data) {
+      //返回数据内，已经包含经纬度  
+      //使用wxMarkerData获取数据  
+      wxMarkerData = data.wxMarkerData;
+      that.data.latitude_s =wxMarkerData[0].latitude;
+      that.data.longitude_s= wxMarkerData[0].longitude;
+      //把所有数据放在初始化data内  
+      that.setData({
+        latitude: wxMarkerData[0].latitude,
+        longitude: wxMarkerData[0].longitude,
+      });
+    }
+    // 发起regeocoding检索请求   
+    BMap.regeocoding({
+      fail: fail,
+      success: success
+    });
+    that.initDateTime(that, latitude_s, latitude_s);
+   
+  
+  },
+	fail_use: auth_conf.fail_use,
+  /**异常选择 */
+  normalPickerBindchange: function (e) {
+    this.setData({
+      picker1Value: e.detail.value
+    })
+  },
+  /**异常描述 */
+  inputRemark: function (e) {
+    var that = this;
+    that.data.exception_Remark = e.detail.value;
+  },
+  /*单选按钮*/
+  radioChange: function (e) {
+    var change_value = e.detail.value;
+    if (change_value == 'Exception') {
+      wx.request({
+        url: app.getBaseUrl() + 'service/wechat_searchExceptions',
+        method: "POST",
+        data: { codeType: "DCYC" },
+        success: function (e){
+          var list_Exceptions = e.data.data.data;
+          var display_val_list=[];
+          var qi_ta='';
+          if (list_Exceptions.length != 0 && list_Exceptions.length!=undefined ){
+            for (var s = 0; s < list_Exceptions.length;s++){
+              if (list_Exceptions[s].displayValue == '其他') {//
+                qi_ta = list_Exceptions[s].displayValue;
+                continue;
+              }
+              display_val_list.push(list_Exceptions[s].displayValue)
+            }
+            display_val_list.unshift(qi_ta);
+          }
+          that.data.dis_val_list = display_val_list;
+          that.setData({
+            picker1Range: display_val_list
+          })
+        }
+      })
+      that.setData({
+        showHiden: (!that.data.showHiden),
+        checked: true,
+      });
+    } else {
+      that.setData({
+        showHiden: (!that.data.showHiden),
+        checked: true
+      });
+    }
+    that.data.radio_Values = e.detail.value;
+
+  },
+  //输入框
+  userNameInput: function (e) {
+    var that = this
+    that.data.order_code = e.detail.value
+  },
+  //点击搜索
+  jumpTo_sousuo: function (data) {
+
+		if (wx.getStorageSync('authority').arriveCar.arriveCarSearch == 1) {
+			var that = this;
+			that.setData({
+				exception_remark: '',
+				images: [],
+				showView: true,
+				picker1Value: 0,
+				picker1Range: [],
+				exception_remark: '',
+			})
+			arr_old = [];//每次只要一进来先清空数组
+			var str_code = "";
+			if (data.type != 'tap') {
+				str_code = data;
+			} else {
+				str_code = this.data.order_code;
+			}
+
+			if (str_code == undefined) {
+				wx.showModal({
+					title: '请输入配载单号',
+					content: '',
+					showCancel: false
+				});
+				return;
+			} else {
+				wx.request({
+					url: app.getBaseUrl() + 'service/wechat_getOmsAttemper',
+					method: "POST",
+					async: false,
+					data: { code: str_code, openId: wx.getStorageSync("openid") },
+					success: function (e) {
+						wx.hideLoading();
+						wx.request({
+							url: app.getBaseUrl() + 'service/wechat_searchExceptions',
+							method: "POST",
+							data: { codeType: "DCYC" },
+							success: function (e) {
+								var list_Exceptions = e.data.data.data;
+								var display_val_list = [];
+								var qi_ta = '';
+								if (list_Exceptions.length != 0 && list_Exceptions.length != undefined) {
+									for (var s = 0; s < list_Exceptions.length; s++) {
+										if (list_Exceptions[s].displayValue == '其他') {//
+											qi_ta = list_Exceptions[s].displayValue;
+											continue;
+										}
+										display_val_list.push(list_Exceptions[s].displayValue)
+									}
+									display_val_list.unshift(qi_ta);
+								}
+								that.data.dis_val_list = display_val_list;
+								that.setData({
+
+									picker1Range: display_val_list
+								})
+							}
+						})
+						var list_exceptin = that.data.dis_val_list;
+						var res = e.data.data;
+						if (res.isSuccess == 'N') {
+							wx.showModal({
+								title: res.data,
+								content: '',
+								showCancel: false
+							});
+							that.setData({
+								val: ''
+							})
+							return;
+						} else {
+							var s_obj = e.data.data.data;
+							if (s_obj.length <= 0 || s_obj.length == undefined) {
+								wx.showModal({
+									title: "配载单不存在",
+									content: '',
+									showCancel: false
+								});
+								that.setData({
+									val: ''
+								})
+								return;
+							}
+							if (s_obj[0].atw != undefined) {
+
+								wx.showModal({
+									title: '配载单已经到达暂存点',
+									content: '',
+									showCancel: false
+								});
+								that.setData({
+									val: '',
+									attemperNo: '',
+									warehouseName: '',
+									driver: '',
+									vehicleNo: '',
+									picker1Value: 0,
+									picker1Range: list_exceptin,
+								})
+
+							} else if (s_obj[0].scheduleStatusName == '未发车') {
+
+								wx.showModal({
+									title: '配载单未发车,请先完成发车操作',
+									content: '',
+									showCancel: false
+								});
+
+								that.setData({
+									val: '',
+									attemperNo: '',
+									warehouseName: '',
+									driver: '',
+									vehicleNo: '',
+									picker1Value: 0,
+									picker1Range: list_exceptin,
+								})
+
+							} else if (s_obj[0].uploadStatus == 0 || s_obj[0].uploadStatus == null) {
+
+								wx.showModal({
+									title: '配载单未上传,请先上传配载单',
+									content: '',
+									showCancel: false
+								});
+
+								that.setData({
+									val: '',
+									attemperNo: '',
+									warehouseName: '',
+									driver: '',
+									vehicleNo: '',
+									picker1Value: 0,
+									picker1Range: list_exceptin,
+								})
+
+							} else {
+								//如果是一则进行数据的跳转
+								var attemperNo_s = '';
+								if (s_obj[0].attemperNo == undefined) {
+									attemperNo_s = '';
+								} else {
+
+									attemperNo_s = s_obj[0].attemperNo;
+								}
+								var warehouseName_s = '';
+								if (s_obj[0].warehouseName == undefined) {
+									warehouseName_s = '';
+								} else {
+
+									warehouseName_s = s_obj[0].warehouseName;
+								}
+								var driver_s = '';
+								if (s_obj[0].driver == undefined) {
+									driver_s = '';
+								} else {
+
+									driver_s = s_obj[0].driver;
+								}
+								var vehicleNo_s = '';
+								if (s_obj[0].vehicleNo == undefined) {
+									vehicleNo_s = '';
+								} else {
+
+									vehicleNo_s = s_obj[0].vehicleNo;
+								}
+								//此处进行数据的设置
+								that.setData({
+									// val: '',
+									attemperNo: attemperNo_s,
+									warehouseName: warehouseName_s,
+									driver: driver_s,
+									vehicleNo: vehicleNo_s,
+									picker1Value: 0,
+									picker1Range: [],
+								})
+
+							}
+						}
+					}
+
+				})
+
+			}
+		} else {
+			this.fail_use()
+		}
+    
+  },
+  //扫码
+  jumpTo_saomiao: function () {
+    that = this;
+    wx.scanCode({
+      success: function (result) {
+        var no = result.result;
+        that.jumpTo_sousuo(no);
+      },
+    })
+  },
+  jumpToMyPage: function (e) {
+    var foreightNo_sl = that.data.foreightNo;
+    if (e.currentTarget.dataset.type == '上传') {//此处是上传功能
+			if (wx.getStorageSync('authority').arriveCar.arriveCarUpload == 1) {
+				var array_erro = [];
+				var latitude_wd = that.data.latitude;//纬度
+				var longitude_jd = that.data.longitude;//经度
+				calculateDistance(that, that.submit);
+			} else {
+				this.fail_use()
+			}
+      
+    } else {
+      // var that = this;
+			if (wx.getStorageSync('authority').arriveCar.arriveCarCamara == 1) {
+				wx.showActionSheet({
+					itemList: ['从相册中选择', '拍照'],
+					itemColor: "#CED63A",
+					success: function (res) {
+						if (res.tapIndex == 0) {
+							that.chooseWxImage('album')//c
+						} else if (res.tapIndex == 1) {
+							that.chooseWxImage('camera')//照相机
+						}
+					}
+				})
+			} else {
+				this.fail_use()
+			}
+      
+
+    }
+
+  },
+  chooseWxImage: function (type) {
+    wx.chooseImage({//图片
+      sizeType: ['compressed'],
+      sourceType: [type],
+      success: function (res) {
+        var foreightNo_uv = that.data.foreightNo;
+        var tempFilePaths = res.tempFilePaths;
+        that.setData({
+          images: that.data.images.concat(tempFilePaths)
+        });
+      },
+      fail: function (resc) {
+      }
+    })
+  },
+  previewImage: function (e) {
+    // 预览图集
+    // var that = this;
+    var current = e.target.dataset.src;
+    wx.previewImage({
+      current: current,
+      urls: that.data.images
+    });
+  },
+  delete: function (e) {
+    // var that =this;
+    var index = e.currentTarget.dataset.index;
+    var images = that.data.images;
+    images.splice(index, 1);
+    that.setData({
+      images: images
+    });
+  },
+  submit: function () {
+    var attemperNo_uv = that.data.attemperNo;//配载单号
+    var driver = that.data.driver;//司机信息
+    var vehicleNo_s = that.data.vehicleNo;//车牌号
+    var tempFilePaths = that.data.images;
+    var num_no = tempFilePaths.length;
+    var s = that.data.showView
+    var latitude_wd = that.data.latitude_s;//纬度
+    var longitude_jd = that.data.longitude_s;//经度
+    var tempFilePaths = that.data.images;
+    var radioValue_s = that.data.radio_Values;
+    if (radioValue_s == undefined) {
+      radioValue_s = 'Normal';
+    }
+    var remark_val = that.data.exception_Remark;//异常原因
+    var select_er = that.data.picker1Value;//选中的第几个
+    var select_er1 = that.data.picker1Range;//异常数组
+    var selector_value = select_er1[select_er];//异常原因选择
+    var departDate = that.data.departDate;
+    var departTime = that.data.departTime;
+    var pickone=wx.getStorageSync("userinfo");
+    var pickoneInfo="";
+    if (pickone != undefined && pickone!=""){
+      pickoneInfo = pickone.userName;
+    }
+    if (attemperNo_uv == undefined || attemperNo_uv == '') {
+
+      wx.showModal({
+        title: '请输入或扫描配载单号',
+        content: '',
+        showCancel: false
+      });
+      return;
+    }
+    var attachmentsIds= "";
+
+    if (radioValue_s == 'Normal') {//正常的上传图片
+      if (num_no == 0) {
+
+        wx.showModal({
+          title: '请添加照片',
+          content: '',
+          showCancel: false
+        });
+      } else {
+
+        // if (s) {
+
+          that.setData({
+            showView: (!that.data.showView),
+
+          })
+          wx.showToast({
+            title: '上传中..',
+            icon: 'loading',
+            duration: 60000,
+          })
+          that.toUploadFile(tempFilePaths, attemperNo_uv, num_no, vehicleNo_s, driver, latitude_wd, longitude_jd, departDate, departTime, pickoneInfo, attachmentsIds)
+
+        // }
+      }
+    } else {//异常的上传图片
+
+      if (selector_value == '其他') {
+        if (remark_val == undefined || remark_val == '') {
+          wx.showModal({
+            title: '请写详细原因',
+            content: '',
+            showCancel: false
+          });
+          return;
+        }
+      }
+      if (num_no == 0) {
+        wx.showModal({
+          title: '请添加照片',
+          content: '',
+          showCancel: false
+        });
+      } else {//此处是有照片的
+
+        // if (s) {
+          wx.showToast({
+            title: '上传中..',
+            icon: 'loading',
+            duration: 6000,
+          })
+          var selecter_id = '';
+          var size_length = obj_arr.length;
+          if (size_length > 0) {
+            for (var x = 0; x < size_length; x++) {
+              if (obj_arr[x].exceptionName == selector_value) {
+                selecter_id = obj_arr[x].basExceptionTypeId;
+                break;
+              }
+            }
+          }
+
+          var attemperNo_uv = that.data.attemperNo;
+          wx.showToast({
+            title: '上传中..',
+            icon: 'loading',
+            duration: 600000,
+          })
+          var latitude_wd = that.data.latitude;//纬度
+
+          var longitude_jd = that.data.longitude;//经度
+          if (remark_val == undefined || remark_val == '') {
+            remark_val="";
+          }
+          var departDate = that.data.departDate; var departTime = that.data.departTime;
+          that.toUploadExceptionFile(tempFilePaths, num_no, remark_val, selector_value, attemperNo_uv, selecter_id, latitude_wd, longitude_jd, departDate, departTime, pickoneInfo, attachmentsIds);
+      }
+    }
+
+  },
+
+  toUploadFile: function (tempFilePaths, attemperNo_uv, num_no, vehicleNo_s, driver, latitude_wd, longitude_jd, departDate, departTime, personalInfo, attachmentsIds) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_signFileBackCar',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: {
+        'attemperNo': attemperNo_uv, 'number_NO': num_no, 'vehicleNo': vehicleNo_s, 'driver': driver, 'latitude': latitude_wd, 'longitude': longitude_jd, 'attachmentsIds': attachmentsIds, 'departDate': departDate, 'departTime': departTime, 'personalInfo': personalInfo
+        },
+      success: function (c) {
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') {//上传成功
+          tempFilePaths.splice(0, 1);
+          num_no = tempFilePaths.length;
+          if (attachmentsIds != "") {
+            attachmentsIds = attachmentsIds + ',' + v_obj.data;//上传的文件名称
+          } else {
+            attachmentsIds = v_obj.data;//上传的文件名称
+          }
+          if (num_no == 0) {//当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function () {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({ delta: 1 });
+              }
+            }, 2000);
+          } else {
+            that.toUploadFile(tempFilePaths, attemperNo_uv, num_no, vehicleNo_s, driver, latitude_wd, longitude_jd, departDate, departTime, personalInfo, attachmentsIds);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  },//完
+
+  initDateTime: function (that, latitude, longitude) {
+    var datetime = new Date();
+    var year = datetime.getFullYear();
+    var month = datetime.getMonth() + 1;
+    if (month <= 9) {
+      month = "0" + month;
+    }
+    var date = datetime.getDate();//获取日(1-31)  
+    if (date <= 9) {
+      date = "0" + date;
+    }
+    var dateformat = year + "-" + month + "-" + date;
+    var timeformat = datetime.getHours() + ':' + datetime.getMinutes();
+    that.setData({
+      departDate: dateformat,
+      departTime: timeformat,
+      latitude: latitude,
+      longitude: longitude
+    });
+  },
+  bindDepartDateChange: function (e) {
+    this.setData({
+      departDate: e.detail.value
+    })
+  },
+  bindDepartTimeChange: function (e) {
+    this.setData({
+      departTime: e.detail.value
+    })
+  },
+  
+  toUploadExceptionFile: function (tempFilePaths, num_no, remark_val, selector_value, attemperNo_uv, selecter_id, latitude_wd, longitude_jd, departDate, departTime, personalInfo, attachmentsIds) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_signFileBackCarNomal',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: {
+        'serviceremark': remark_val, 'serviceSelect': selector_value, 'number_NO': num_no, 'attemperNo': attemperNo_uv, 'Select_Id': selecter_id, 'latitude': latitude_wd, 'longitude': longitude_jd, 'departDate': departDate, 'departTime': departTime, 'personalInfo': personalInfo, 'attachmentsIds': attachmentsIds
+        },
+      success: function (c) {
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') {//上传成功
+          tempFilePaths.splice(0, 1);
+          num_no = tempFilePaths.length;
+          if (attachmentsIds != "") {
+            attachmentsIds = attachmentsIds + ',' + v_obj.data;//上传的文件名称
+          } else {
+            attachmentsIds = v_obj.data;//上传的文件名称
+          }
+          if (num_no == 0) {//当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function () {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({ delta: 1 });
+              }
+            }, 3000);
+          } else {
+            that.toUploadExceptionFile(tempFilePaths, num_no, remark_val, selector_value, attemperNo_uv, selecter_id, latitude_wd, longitude_jd, departDate, departTime, personalInfo, attachmentsIds);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  },//完
+
+})

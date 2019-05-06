@@ -1,0 +1,43 @@
+ <!--搜索框  -->
+<view class="weui-search-bar">
+  <view class="weui-search-bar__form">
+    <!--点击之后，出现input框  -->
+    <view class="weui-search-bar__box">
+      <icon class="weui-icon-search_in-box" type="search" size="14"></icon>
+      <input type="text" class="weui-search-bar__input" placeholder="搜索" value="{{inputVal}}" focus="{{inputShowed}}" bindinput="inputTyping" />
+      <!--输入款字数大于0，则显示清除按钮  -->
+      <view class="weui-icon-clear" wx:if="{{inputVal.length > 0}}" bindtap="clearInput">
+        <icon type="clear" size="14"></icon>
+      </view>
+    </view>
+    <!--没点击之前，只是一些文字和图标  -->
+    <label class="weui-search-bar__label" hidden="{{inputShowed}}" bindtap="showInput">
+      <icon class="weui-icon-search" type="search" size="14"></icon>
+      <view class="weui-search-bar__text">设备号</view>
+    </label>
+  </view>
+  <!--动态出现的“取消”键  -->
+  <view class="weui-search-bar__cancel-btn" hidden="{{!inputShowed}}" bindtap="hideInput">取消</view>
+</view>
+
+<view class="bg-b"></view>
+    <block wx:for-items="{{content_alarm}}" wx:key="{{index}}">
+      <view bindtap='moreDetail' data-numb="{{index}}" class='moreDetail'>
+        <view class='p10t'>
+          <text class='view-mode0'>{{item.deviceCode}}</text>
+          <text style='float:right;font-size:40rpx;font-weight:bold;color:#999'>···</text>
+        </view>
+        <view class='view-mode1 p10'>{{item.gpsTime}}</view>
+      
+        <view class='view-mode4 p10'>设备号：{{item.deviceCode}}</view>
+        <view class='view-mode3 p10'>
+          <text>设备状态：</text>
+          <text>{{item.status}}</text>
+        </view>
+        <view class='view-mode6 p10'>
+          详情
+          <view style='float:right;font-size:34rpx;font-weight:bold;color:#999;display:block;transform:scaleY(1.5)'>></view>
+        </view>
+      </view>
+
+    </block>

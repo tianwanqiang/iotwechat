@@ -1,0 +1,82 @@
+/* pages/viewpage/viewpage.wxss */
+
+.container_name {
+  /* height: 100%; */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: space-between;
+  padding: 0rpx 40rpx;
+  box-sizing: border-box;
+} 
+
+
+ .index-nav view {
+  flex:1;
+  flex-direction: flex-start;
+  /* border-right: 1px solid #F2f2f2; */
+} 
+
+view.text text {
+  margin-left: 10px;
+  line-height: 18px;
+}
+
+ .containerl {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: space-between;
+  /* padding: 90rpx 0; */
+  box-sizing: border-box;
+  font-size:16px;
+} 
+
+@font-face {
+  font-family: 'iconfont';  /* project id 501373 */
+  src: url('//at.alicdn.com/t/font_501373_chco39fy9ptrcnmi.eot');
+  src: url('//at.alicdn.com/t/font_501373_chco39fy9ptrcnmi.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_501373_chco39fy9ptrcnmi.woff') format('woff'),
+  url('//at.alicdn.com/t/font_501373_chco39fy9ptrcnmi.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_501373_chco39fy9ptrcnmi.svg#iconfont') format('svg');
+}
+
+
+/*这个是点击按钮的样式*/
+ @font-face {
+  font-family: 'iconfont';  /* project id 501373 */
+  src: url('//at.alicdn.com/t/font_501373_qu6ip2wesmc59udi.eot');
+  src: url('//at.alicdn.com/t/font_501373_qu6ip2wesmc59udi.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_501373_qu6ip2wesmc59udi.woff') format('woff'),
+  url('//at.alicdn.com/t/font_501373_qu6ip2wesmc59udi.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_501373_qu6ip2wesmc59udi.svg#iconfont') format('svg');
+}
+
+.iconfont {
+  font-size:26px;
+}
+
+.picker1{
+  padding: 20rpx;
+  height:35rpx;
+  background-color: #FFFFFF;
+  font-size:14px;
+}
+.picker2{
+   height:20px;
+  background-color: transparent;
+  font-size:14px;
+}
+.picker_s{
+  height:50px;
+  background-color: #FFFFFF;
+  font-size:14px;
+}
+
+page {
+  /* background-color: #ddd; */
+   background-color: #fbf9fe; 
+  /* height: 100%; */
+}

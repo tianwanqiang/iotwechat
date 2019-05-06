@@ -1,0 +1,19 @@
+function getRequest(url, fn) {
+  wx.request({
+    url: url,
+    method: 'GET',
+    header: {
+      'Content-Type': 'json' // 默认值
+    },
+    success: function (res) {
+      fn.call(this, res.data);
+    },
+    fail: function (error) {
+      console.log(error);
+    }
+  })
+};
+
+module.exports = {
+  getRequest: getRequest
+}

@@ -1,0 +1,183 @@
+var auth_conf = require('../../utils/auth.js');
+const app = getApp();
+Page({
+  data: {
+    enableOperate: false, //权限控制，用户需要先绑定
+    rolename: "",
+    navs: [{
+        text: '装车', //background:#673AB7;
+        ys: "iconfont icon-zhuangcheshoujiandian",
+        styles: "font-size:60rpx; color:#fff; color:; width:99.5%; height:95%;"
+      }, {
+        text: '发车', //background:#03a9f4;
+        ys: "iconfont icon-fache",
+        styles: "font-size:60rpx; color:#fff;  width:97%; height:95%;"
+      },
+      {
+        text: '到车', // background:#FFA579;
+        ys: "iconfont icon-banjiahuochecongnadaona",
+        styles: "font-size:60rpx; color:#fff; width:97%; height:95%;"
+      }, {
+        text: '单证交接', // background:#FFC107;
+        ys: "iconfont icon-paper-handover",
+        styles: "font-size:60rpx; color:#fff; width:97%; height:95%;"
+      }, {
+        text: '货物异常', //background:#F44336;
+        ys: "iconfont icon-yunshuyichangchuli",
+        styles: "font-size:60rpx; color:#fff;  width:97%; height:95%;"
+      }, {
+        text: '终端绑定', // background:#FF7575;
+        // ys: "iconfont icon-terminalBinding",
+        ys: "iconfont icon-bind",
+        styles: "font-size:60rpx; color:#fff; width:97%; height:95%;"
+      }, {
+        text: '签收', // background:#4CAF50;
+        ys: "iconfont icon-songhuoqianshou",
+        styles: "font-size:60rpx; color:#fff; width:99.5%; height:95%;"
+      }
+
+    ]
+  },
+
+  onLoad: function() {
+
+  },
+  onShow: function() {
+    //console.log(auth_conf.updataAuth)
+    var openid = wx.getStorageSync("openid");
+    var isLogin = wx.getStorageSync('login')
+    if (openid) {
+      const that = this;
+      if (isLogin && isLogin == "true") {
+        wx.request({
+          url: app.getBaseUrl() + 'service/wechat_alreadyBindOpenid',
+          method: "POST",
+          data: {
+            openid: openid
+          },
+          success: function(e) {
+            if (e.data.data.isSuccess == 'Y') {
+              console.log(e.data.data.data.userinfo.roleName)
+
+              that.setData({
+                enableOperate: true,
+                rolename: e.data.data.data.userinfo.roleName
+              });
+
+              wx.setStorageSync("userinfo", e.data.data.data.userinfo);
+              wx.setStorageSync("authority", e.data.data.data.authority);
+              console.log(e.data.data.data.userinfo);
+              console.log(e.data.data.data.authority);
+            } else {
+
+            }
+          }
+        })
+      } else {
+        this.setData({
+          enableOperate: false
+        })
+      };
+    } else {
+      this.setData({
+        enableOperate: false
+      })
+      //this.defaultData;
+      //console.log(auth_conf);
+      wx.setStorageSync("authority", {
+        "abnormal": {
+          "abnormalCamara": "0",
+          "abnormalSearch": "0",
+          "abnormalUpload": "0"
+        },
+        "signFor": {
+          "signForCamara": "0",
+          "signForSearch": "0",
+          "signForUpload": "10"
+        },
+        "giveUnin": {
+          "giveUninCar": "0",
+          "giveSearch": "0"
+        },
+        "arriveCar": {
+          "arriveCarSearch": "0",
+          "arriveCarUpload": "0",
+          "arriveCarCamara": "0"
+        },
+        "binding": {
+          "bindingUpload": "0",
+          "bindingSearch": "0",
+          "unbinding": "0",
+          "binding": "0"
+        },
+        "loadingCar": {
+          "loadingCamara": "0",
+          "loadingSearch": "0",
+          "loadingUpload": "0"
+        },
+        "departCar": {
+          "departUpload": "0",
+          "departSearch": "0",
+          "departCheckout": "0",
+          "depart": "0"
+        }
+      })
+    }
+  },
+  //updataAuth: auth_conf.updataAuth,
+  //defaultData: auth_conf.defaultData,
+  takeAction: function(e) {
+
+    if (e.currentTarget.dataset.type == '签收') {
+      wx.navigateTo({
+        url: '../signFor/signFor',
+      })
+    } else {
+      if (this.data.rolename == null) {
+        wx.showToast({
+          title: '角色信息错误，请检查!',
+          icon: 'none',
+          duration: 3000
+        });
+      } else {
+        if (e.currentTarget.dataset.type == '到车' && this.data.enableOperate) { //到车
+          wx.navigateTo({
+            url: '../backCar/backCar',
+          })
+        } else if (e.currentTarget.dataset.type == '单证交接' && this.data.enableOperate) { //pod交接
+          wx.navigateTo({
+            url: '../connect/connect',
+
+          }) && this.data.enableOperate
+        } else if (e.currentTarget.dataset.type == '装车' && this.data.enableOperate) {
+          wx.navigateTo({
+            url: '../truck/truck',
+          })
+        } else if (e.currentTarget.dataset.type == '货物异常' && this.data.enableOperate) {
+          wx.navigateTo({
+            url: '../abnomal/abnomal',
+
+          })
+        } else if (e.currentTarget.dataset.type == '发车') {
+          wx.navigateTo({
+            url: '../depart/depart',
+
+          })
+        } else if (e.currentTarget.dataset.type == '终端绑定' && this.data.enableOperate) {
+          wx.navigateTo({
+            url: '../binding/binding',
+          });
+        } else {
+          wx.showToast({
+            title: '游客不能操作，先绑定个人用户!',
+            icon: 'none',
+            duration: 3000
+          });
+        }
+      }
+    }
+
+  }
+
+
+})

@@ -1,0 +1,31 @@
+<view style='height:30%'>
+<!-- <swiper indicator-dots="true" autoplay="true" interval="2000">
+  <swiper-item>
+    <image src='/Image/swiper/1.jpg'></image>
+  </swiper-item>
+  <swiper-item>
+    <image src='/Image/swiper/2.jpg'></image>
+  </swiper-item>
+  <swiper-item>
+    <image src='/Image/swiper/3.jpg'></image>
+  </swiper-item>
+</swiper> -->
+</view>
+<view class="section index-nav" style='height:68%'>
+  <block wx:for-items="{{navs}}" wx:key="{{navs}}">
+    <view class="l-c-c" bindtap="takeAction" data-type="{{item.text}}">
+      <view style="{{item.styles}}" class='l-c-c-c'>
+        <view class=" index-icon {{item.ys}}">{{item.content}}</view>  
+        <text style='font-size:36rpx;'>{{item.text}}</text>
+      </view>
+      
+    </view>
+  </block>
+</view>
+<view class='bg_img'>
+  <image id='bg_w' src='https://lg-a3mn5gju-1257119824.cos.ap-shanghai.myqcloud.com/bg_w2.png'></image>
+	<!-- <image id='bg_w' src='/Image/swiper/bg_w2.png'></image> -->
+  <image  src='https://lg-a3mn5gju-1257119824.cos.ap-shanghai.myqcloud.com/bg_x.jpg'></image>
+	<!-- <image src='/Image/swiper/bg_x.jpg'></image> -->
+
+</view>

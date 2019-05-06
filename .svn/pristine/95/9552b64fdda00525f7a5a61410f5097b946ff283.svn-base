@@ -1,0 +1,161 @@
+var auth_conf = require('../../utils/auth.js');
+var app = getApp();
+Page({
+  /**
+   * 输入框监听器
+   */
+	inputCodeHandler: function (e) {
+		var that = this;
+		that.setData({
+			'inputCode': e.detail.value
+		});
+	},
+	fail_use: auth_conf.fail_use,
+  /**
+   * 查询处理器
+   */
+	searchHandler: function () {
+		console.log(wx.getStorageSync('authority'))
+		if (wx.getStorageSync('authority').giveUnin.giveSearch == 1) {
+			console.log(this.data)
+			if (this.data.attemperNo) {
+				var signNoArray = [];
+				signNoArray.push(this.data.inputCode);
+				this.updateOrderPodIsConnect(signNoArray, 1, true);
+			} else {
+				this.queryAttemperDetail(this.data.inputCode);
+			}
+		} else {
+			this.fail_use()
+		}
+
+	},
+  /**
+   * 扫码处理器
+   */
+	scanHandler: function () {
+		var that = this;
+		wx.scanCode({
+			success: function (result) {
+				if (that.data.attemperNo) {
+					var signNoArray = [];
+					signNoArray.push(result.result);
+					that.updateOrderPodIsConnect(signNoArray, 1, true);
+				} else {
+					that.queryAttemperDetail(result.result);
+				}
+			},
+			fail: function (error) {
+				console.log(error);
+			}
+		})
+	},
+  /**
+   * 查询配载单明细
+   */
+	queryAttemperDetail: function (attemperNo) {
+		var that = this;
+		if (!attemperNo) {
+			wx.showToast({
+				title: '单号不能为空', icon: 'none', duration: 1000
+			});
+			return;
+		}
+		wx.showLoading({
+			title: '查询中'
+		});
+		wx.request({
+			url: app.getBaseUrl() + 'service/wechat_queryAttemperDetail',
+			method: "POST",
+			data: {
+				'attemperNo': attemperNo
+			},
+			success: function (e) {
+				var resultData = e.data.data;
+				if (resultData.isSuccess === 'Y') {
+					var attemperDetailArray = resultData.data;
+					that.setData({
+						'inputCode': '',
+						'attemperNo': attemperDetailArray[0].attemperNo,
+						'attemperDetailArray': attemperDetailArray
+					});
+				} else {
+					wx.showToast({
+						title: e.data.errormsg,
+						duration: 3000
+					});
+				}
+			},
+			complete: function (e) {
+				wx.hideLoading();
+			}
+		});
+	},
+
+  /**
+   * 更新订单的pod交接状态
+   * @param signNoList 签收单号列表
+   * @param podConnectStatus POD交接状态，1-已交接，2-干线未随车
+   * @param autoScan 是否需要继续扫描
+   */
+	updateOrderPodIsConnect: function (signNoArray, podConnectStatus, autoScan) {
+		var that = this;
+		wx.request({
+			url: app.getBaseUrl() + 'service/wechat_updateOrderPodIsConnect',
+			method: "POST",
+			data: {
+				'signNoArray': signNoArray,
+				'attemperNo': that.data.attemperNo,
+				'podConnectStatus': podConnectStatus
+			},
+			success: function (e) {
+				var resultData = e.data.data;
+				if (resultData.isSuccess === 'Y') {
+					that.setData({
+						'attemperDetailArray': resultData.data
+					});
+					if (autoScan) {
+						that.scanHandler();
+					} else {
+						wx.showToast({
+							title: '操作成功',
+							icon: 'success',
+							duration: 3000
+						});
+					}
+				} else {
+					wx.showToast({
+						title: resultData.description,
+						icon: 'none',
+						duration: 3000
+					});
+				}
+			}
+		});
+	},
+
+  /**
+   * 选择框事件处理器
+   */
+	checkboxChange: function (e) {
+		var that = this;
+		that.setData({
+			'selectedSignNoArray': e.detail.value
+		});
+	},
+
+  /**
+   * 把签收单更新为干线POD未随车状态
+   */
+	submitPodIsConnect: function () {
+		if (wx.getStorageSync('authority').giveUnin.giveUninCar == 1) {
+			var that = this;
+			var selectedSignNoArray = that.data.selectedSignNoArray;
+			that.updateOrderPodIsConnect(selectedSignNoArray, 2, false);
+		} else {
+			this.fail_use()
+		}
+
+	}
+
+})

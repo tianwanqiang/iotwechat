@@ -1,0 +1,73 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="signoBindinput" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入签收单号或扫码" value="{{signo}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="doSearch"></text>
+      <text class="iconfont icon-saomiao" bindtap="doScanCode"></text>
+    </view>
+  </view>
+</view>
+<!--此处的功能是进行异常处理隐藏显示-->
+<view style="margin-top:10px;">
+  <view class="section__title">已添加单号：</view>
+  <view class="picker" style="margin-top:5px;">
+    <text>{{signoText}}</text>
+  </view>
+</view>
+<view>
+  <view class="section">
+    <view class="section__title">反馈部门：</view>
+    <picker value="{{departmentIndex}}" range="{{departmentNames}}" bindchange="departmentBindchange" style="margin-top:5px;">
+      <view class="picker">{{departmentNames[departmentIndex]}}</view>
+    </picker>
+  </view>
+</view>
+<view style="margin-top:10px;">
+  <view class="section__title">反馈人：</view>
+  <view class="picker" style="margin-top:5px;">
+    <input type="text" placeholder="请填写反馈人" bindinput="feedbackPersonBindinput" maxlength="32" />
+  </view>
+</view>
+<view>
+  <view class="section">
+    <view class="section__title">一级异常类型：</view>
+    <picker value="{{exception1Index}}" range="{{exception1Names}}" bindchange="exception1Bindchange" style="margin-top:5px;">
+      <view class="picker">{{exception1Names[exception1Index]}}</view>
+    </picker>
+  </view>
+</view>
+<view>
+  <view class="section">
+    <view class="section__title">二级异常类型：</view>
+    <picker value="{{exception2Index}}" range="{{exception2Names}}" bindchange="exception2Bindchange" style="margin-top:5px;">
+      <view class="picker">{{exception2Names[exception2Index]}}</view>
+    </picker>
+  </view>
+</view>
+<view style="margin-top:10px;">
+  <view class="section__title">描述详细原因：</view>
+  <view class="picker" style="margin-top:5px;">
+        <input type="text" placeholder="请填写详细原因" bindinput="exceptionDescBindinput" value="{{exceptionDesc}}" maxlength="300" />
+  </view>
+</view>
+
+<view class="section index-nav">
+  <block wx:for-items="{{navs}}" wx:key="{{index}}">
+    <view class="btn-list" bindtap="uploadBindtap" data-type="{{item.text}}">
+      <span class="{{item.ys}}"></span>
+      <text>{{item.text}}</text>
+    </view>
+  </block>
+</view>
+
+<view class="gallery">
+  <view class="item" wx:for="{{images}}" wx:key="">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx; border:#ddd 1px solid; padding:1px;" src=" {{item}}" data-src="{{item}}" bindtap="previewImage" mode="aspectFill" />
+    <view class="delete" bindtap="deleteImage" data-index="{{index}}">
+      <span style="{{spanStyle}};left: {{imageWidth / 2 - 26}}px;">X</span>
+    </view>
+  </view>
+  <view class="item">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx" src="" class="button-upload" bindtap="chooseImage" />
+  </view>
+</view>

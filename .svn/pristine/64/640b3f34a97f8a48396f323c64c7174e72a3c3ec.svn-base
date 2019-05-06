@@ -1,0 +1,73 @@
+<view class='containerl'>
+
+<view style="">
+<view class='queryInput' >
+<label style='font-size:14px'>设备号：</label>
+<input type="text" bindinput="userNameInput" placeholder-class="place-holder" placeholder='输入设备号' value="{{deviceCode}}"/>
+</view>
+ <picker mode="selector"  bindchange="bindOperTypeChange" class='queryInput' value="{{operArraysIndex}}" range="{{alarmType}}"
+ range-key="tname">
+  <label style='font-size:14px'>操作类型：{{alarmType[operArraysIndex].tname}}</label>
+  </picker>
+ <view style="width:40%;margin:40rpx auto;text-align:center;background:#336699;border-radius:20px;color:#fff"  bindtap='jumpToMyPage_sousuo'>
+      <text class="iconfont icon-sousuo" style='color:#fff'></text>
+      <span style='font-size:26px;padding:0 20rpx;line-height:90rpx;'>查询</span>
+    </view>
+</view>
+
+  <!--kaishi -->
+<view class="list01">
+  <scroll-view scroll-y="true" bindscrolltolower="searchScrollLower" >
+  <view class="forecast" >
+    <block wx:for="{{forecast}}" wx:for-index="index" wx:for-item="fc"  wx:key="{{fc.deviceCode}}">
+     <view class="zuiwaiceng"> 
+    <!--最外侧-->
+    <view class="castItem-out"  data-type="{{fc.deviceCode}}" > 
+      <!--第一个-->
+     <view class="castItem"> 
+   
+         <view class="castType" >
+         设备号:
+        </view>
+         <view class="castValue2" >
+         {{fc.deviceCode}}
+        </view>
+          <view class="castType" >
+         最后报警时间:
+        </view>
+         <view class="castValue2" >
+         {{fc.lastAlarmTime}}
+        </view>
+         <view class="castType" >
+         最后报警位置:
+        </view>
+         <view class="castValue2" >
+         {{fc.lastAlarmPlace==''?'无':fc.lastAlarmPlace}}
+        </view>
+      </view>   
+         <view class="castItem"> 
+         <view class="castType"> 
+         创建时间:
+        </view>
+         <view  class="castValue2"> 
+          {{fc.createTime}}
+        </view>
+           <view class="castType">
+         更新时间:
+        </view>
+         <view  class="castValue2">
+        {{fc.updateTime}}
+        </view>
+      </view>    
+
+    </view> 
+ 
+     </view> 
+
+    </block>
+  </view>
+    <view class="loading" hidden="{{!searchLoading}}">正在载入更多...</view>  
+    <view class="loading complete" hidden="{{!searchLoadingComplete}}">已加载全部</view>  
+</scroll-view> 
+</view>
+</view>

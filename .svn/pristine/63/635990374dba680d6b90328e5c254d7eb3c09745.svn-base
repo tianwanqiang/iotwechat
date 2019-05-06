@@ -1,0 +1,1148 @@
+var auth_conf = require('../../utils/auth.js');
+var bmap = require('../../libs/bmap-wx.min.js');
+var wxMarkerData = []; //定位成功回调对象  
+var longitude_s = ''; //经度  
+var latitude_s = ''; //纬度  
+var app = getApp();
+var foreightNo = '';
+var arr_old = '';
+var j;
+var that;
+Page({
+  data: {
+    picker1Value: '',
+    picker1Range: '',
+    exception_remark: '',
+    markers: [],
+    longitude: '', //经度  
+    latitude: '', //纬度  
+    address: '', //地址  
+    cityInfo: {}, //城市信息  
+    ctx_width: 0,
+    ctx_height: 0,
+    navs: [{
+        text: '上传',
+        style: "width:120px;",
+        ys: "iconfont icon-shangchuan",
+        styles: "font-size:32px;color:#3bb4f2;",
+        key: "scanCode"
+      }, {
+        text: '拍照',
+        style: "width:120px;",
+        ys: "iconfont icon-paizhao",
+        styles: "color:red;font-size:24px;",
+        key: "exception"
+      }
+
+    ],
+    array: [{
+        name: 'Normal',
+        value: '正常',
+        checked: 'true'
+      },
+      {
+        name: 'Exception',
+        value: '异常'
+      },
+    ],
+    images: [],
+    images_1: [],
+    // imageWidth: getApp().screenWidth / 1 - 40,
+    imageWidth: 190,
+    spanStyle: "iconfont icon-CombinedShape;color:red;font-size:18px;padding-left:73px;",
+    col: "width: 40%;background-color:#3bb4f2; color:#fff; position: fixed;bottom: 20px; left:30%; border-radius: 30px; border:none;",
+    showView: true,
+    showHiden: false,
+  },
+	fail_use: auth_conf.fail_use,
+  /**异常选择 */
+  normalPickerBindchange: function(e) {
+    this.setData({
+      picker1Value: e.detail.value
+    })
+  },
+  /**异常描述 */
+  inputRemark: function(e) {
+    var that = this;
+    that.data.exception_Remark = e.detail.value;
+  },
+  /*单选按钮*/
+  radioChange: function(e) {
+    console.log('radio发生change事件，携带value值为：', e.detail.value)
+    var change_value = e.detail.value;
+    if (change_value == 'Exception') {
+      wx.request({
+        url: app.getBaseUrl() + 'service/wechat_searchExceptions',
+        method: "POST",
+        data: {
+          codeType: "QSYC"
+        },
+        success: function(e) {
+          console.log(e);
+          var list_Exceptions = e.data.data.data;
+          var display_val_list = [];
+          var qi_ta = '';
+          if (list_Exceptions.length != 0 && list_Exceptions.length != undefined) {
+            for (var s = 0; s < list_Exceptions.length; s++) {
+              if (list_Exceptions[s].displayValue == '其他') { //
+                qi_ta = list_Exceptions[s].displayValue;
+                continue;
+              }
+              display_val_list.push(list_Exceptions[s].displayValue)
+            }
+            if (qi_ta != '') {
+              display_val_list.unshift(qi_ta);
+            }
+          }
+          that.setData({
+            picker1Value: 0,
+            picker1Range: display_val_list
+          })
+        }
+      })
+      that.setData({
+        showHiden: (!that.data.showHiden),
+        checked: true,
+      });
+    } else {
+      that.setData({
+        showHiden: (!that.data.showHiden),
+        checked: true
+      });
+    }
+    that.data.radio_Values = e.detail.value;
+  },
+
+  //输入框
+  userNameInput: function(e) {
+    var that = this
+    that.data.order_code = e.detail.value
+  },
+  //点击搜索
+  jumpTo_sousuo: function() {
+		
+			arr_old = []; //每次只要一进来先清空数组
+			var str_code = this.data.order_code;
+			console.log(str_code);
+			var that = this;
+			if (str_code == undefined) {
+				wx.showToast({
+					title: '输入单号不能为空!',
+					icon: 'loading',
+					duration: 1000
+				})
+				return
+			} else {
+				wx.showToast({
+					title: '请求成功',
+					icon: 'loading',
+					duration: 3000
+				})
+				wx.request({
+					url: app.getBaseUrl() + 'service/wechat_SearchObjInfo',
+					method: "POST",
+					async: false,
+					data: {
+						signNo: str_code
+					},
+					success: function (e) {
+						console.log(e);
+						console.log("e");
+						wx.hideLoading();
+						wx.request({
+							url: app.getBaseUrl() + 'service/wechat_searchExceptions',
+							method: "POST",
+							async: false,
+							data: {
+								codeType: "DCYC"
+							},
+							success: function (e) {
+								console.log(e);
+								var list_Exceptions = e.data.data.data;
+								var display_val_list = [];
+								var qi_ta = '';
+								if (list_Exceptions.length != 0 && list_Exceptions.length != undefined) {
+									for (var s = 0; s < list_Exceptions.length; s++) {
+										if (list_Exceptions[s].displayValue == '其他') { //
+											qi_ta = list_Exceptions[s].displayValue;
+											continue;
+										}
+										display_val_list.push(list_Exceptions[s].displayValue)
+									}
+									display_val_list.unshift(qi_ta);
+								}
+								that.data.dis_val_list = display_val_list;
+								that.setData({
+
+									picker1Range: display_val_list
+								})
+							}
+						})
+						console.log(e);
+						if (e.data.isSuccess == 'N') {
+							wx.showToast({
+								title: '单号不存在或失效',
+								icon: 'loading',
+								duration: 3000
+							})
+
+							that.setData({
+								val: ''
+							})
+
+						} else {
+							//进行数据的传递查看是否能后传来数据
+							var s_obj = e.data.data.data;
+							var size = s_obj.length;
+							if (size == 1) { //如果是一则进行数据的跳转
+								var foreightNo_s = '';
+								if (s_obj[0].foreightNo == undefined) {
+									foreightNo_s = '';
+								} else {
+									foreightNo_s = s_obj[0].foreightNo;
+								}
+								//新添加的signNo 
+								var signNo_s = '';
+								if (s_obj[0].signNo == undefined) {
+									signNo_s = '';
+								} else {
+									signNo_s = s_obj[0].signNo;
+								}
+								var consignee_s = '';
+								if (s_obj[0].consignee == undefined) {
+									consignee_s = '';
+								} else {
+									consignee_s = s_obj[0].consignee;
+								}
+								var consigneeAdr_s = '';
+								if (s_obj[0].consigneeAdr == undefined) {
+									consigneeAdr_s = '';
+								} else {
+									consigneeAdr_s = s_obj[0].consigneeAdr;
+								}
+								var actualTotalPieces_s = '';
+								if (s_obj[0].actualTotalPieces == undefined) {
+									actualTotalPieces_s = '';
+								} else {
+									actualTotalPieces_s = s_obj[0].actualTotalPieces;
+								}
+								var actualTotalVolume_s = '';
+								if (s_obj[0].actualTotalVolume == undefined) {
+									actualTotalVolume_s = '';
+								} else {
+									actualTotalVolume_s = s_obj[0].actualTotalVolume;
+								}
+								var actualTotalWeight_s = '';
+								if (s_obj[0].actualTotalWeight == undefined) {
+									actualTotalWeight_s = '';
+								} else {
+									actualTotalWeight_s = s_obj[0].actualTotalWeight;
+								}
+								var deliverAddressLimit_s = '';
+								if (s_obj[0].deliverAddressLimit == undefined) {
+									deliverAddressLimit_s = '';
+								} else {
+									deliverAddressLimit_s = s_obj[0].deliverAddressLimit;
+								}
+								var deliverAddressTypeCode_s = '';
+								if (s_obj[0].deliverAddressTypeCode == undefined) {
+									deliverAddressTypeCode_s = '';
+								} else {
+									deliverAddressTypeCode_s = s_obj[0].deliverAddressTypeCode;
+								}
+								var deliverTimeRequest_s = '';
+								if (s_obj[0].deliverTimeRequest == undefined) {
+									deliverTimeRequest_s = '';
+								} else {
+									deliverTimeRequest_s = s_obj[0].deliverTimeRequest;
+								}
+								var isHaveDischagreTools_s = '';
+								if (s_obj[0].isHaveDischagreTools == undefined) {
+									isHaveDischagreTools_s = '';
+								} else {
+									isHaveDischagreTools_s = s_obj[0].isHaveDischagreTools;
+								}
+								//
+								var crd_s = '';
+								if (s_obj[0].crd == undefined) {
+									crd_s = '';
+								} else {
+									var oldTime = s_obj[0].crd;
+									var newTime = new Date(oldTime);
+									var y = newTime.getFullYear();
+									var m = newTime.getMonth() + 1;
+									if (m < 10) {
+										m = "0" + m;
+									}
+									var d = newTime.getDate();
+									if (d < 10) {
+										d = "0" + d;
+									}
+									var h = newTime.getHours();
+									if (h < 10) {
+										h = "0" + h;
+									}
+									var M = newTime.getMinutes();
+									if (M < 10) {
+										M = "0" + M;
+									}
+									var s = newTime.getSeconds();
+									if (s < 10) {
+										s = "0" + s;
+									}
+									var val_s = y + "/" + m + "/" + d + " " + h + ":" + M + ":" + s;
+									crd_s = val_s;
+								}
+								var customerRemarks_s = '';
+								if (s_obj[0].customerRemarks == undefined) {
+									customerRemarks_s = '';
+								} else {
+									customerRemarks_s = s_obj[0].customerRemarks;
+								}
+								that.setData({
+									foreightNo: foreightNo_s,
+									signNo: signNo_s,
+									consignee: consignee_s,
+									consigneeAdr: consigneeAdr_s,
+									actualTotalPieces: actualTotalPieces_s,
+									actualTotalVolume: actualTotalVolume_s,
+									actualTotalWeight: actualTotalWeight_s,
+									deliverAddressLimit: deliverAddressLimit_s,
+									deliverAddressTypeCode: deliverAddressTypeCode_s,
+									deliverTimeRequest: deliverTimeRequest_s,
+									isHaveDischagreTools: isHaveDischagreTools_s,
+									// customerRemarks  crd
+									crd: crd_s,
+									customerRemarks: customerRemarks_s
+								})
+								//进行异常数据的异步请求
+								var p_no = that.data.foreightNo;
+								console.log("第二次请求");
+								console.log(p_no);
+								var sign_No = that.data.signNo;
+								var array_erro = [];
+								var latitude_wd = that.data.latitude; //纬度
+								console.log(latitude_wd);
+								var longitude_jd = that.data.longitude; //经度
+								console.log(longitude_jd);
+								//此处是进行图片的下载         
+								var img_leng = s_obj[0].url;
+								console.log(img_leng);
+								let test_imageList = new Array();
+								for (var i = 0; i < img_leng.length; i++) {
+									console.log("是我空数组");
+									console.log(test_imageList);
+									var URL = app.getBaseUrl() + 'service/file/getFileFromMongo/oms.pic.fs/' + img_leng[i];
+									wx.downloadFile({
+										url: URL,
+										type: 'image',
+										success: function (res) {
+											console.log(res);
+											var filePath = res.tempFilePath
+											test_imageList = test_imageList.concat(filePath);
+											console.log(test_imageList);
+											that.setData({
+												images_1: test_imageList
+											});
+										}
+									});
+								} //此处是进行图片的下载
+								wx.request({
+									url: app.getBaseUrl() + 'service/wechat_QueryArrayErrorInfon',
+									method: "POST",
+									async: false,
+									data: {
+										serviceData: p_no
+									},
+									success: function (scend) {
+										let array_erro = JSON.stringify(scend.data);
+										if (array_erro !== undefined && array_erro != '') {
+											//新增signNo
+											var signNo_s = '';
+											if (that.data.signNo == undefined) {
+												signNo_s = '';
+											} else {
+												signNo_s = that.data.signNo;
+											}
+											var consignee_s = '';
+											if (that.data.consignee == undefined) {
+												consignee_s = '';
+											} else {
+												consignee_s = that.data.consignee;
+											}
+											var consigneeAdr_s = '';
+											if (that.data.consigneeAdr == undefined) {
+												consigneeAdr_s = '';
+											} else {
+												consigneeAdr_s = that.data.consigneeAdr;
+											}
+											var actualTotalPieces_s = '';
+											if (that.data.actualTotalPieces == undefined) {
+												actualTotalPieces_s = '';
+											} else {
+												actualTotalPieces_s = that.data.actualTotalPieces;
+											}
+											var actualTotalVolume_s = '';
+											if (that.data.actualTotalVolume == undefined) {
+												actualTotalVolume_s = '';
+											} else {
+												actualTotalVolume_s = that.data.actualTotalVolume;
+											}
+											var actualTotalWeight_s = '';
+											if (that.data.actualTotalWeight == undefined) {
+												actualTotalWeight_s = '';
+											} else {
+												actualTotalWeight_s = that.data.actualTotalWeight;
+											}
+											var display_val_list = that.data.dis_val_list;
+											that.setData({
+												picker1Value: 0,
+												picker1Range: display_val_list
+											})
+										}
+									}
+								})
+								//第二次请求完成
+							}
+						}
+					}
+				})
+			}
+		
+  },
+  //扫码
+  jumpTo_saomiao: function() {
+    arr_old = []; //每次只要一进来先清空数组
+    wx.scanCode({
+      success: function(result) {
+        var s = result.result;
+        wx.showToast({
+          title: '请求成功',
+          icon: 'loading',
+          duration: 3000
+        })
+        wx.request({
+          url: app.getBaseUrl() + 'service/wechat_SearchObjInfo',
+          method: "POST",
+          async: false,
+          data: {
+            signNo: s
+          },
+          success: function(e) {
+            wx.request({
+              url: app.getBaseUrl() + 'service/wechat_searchExceptions',
+              method: "POST",
+              data: {
+                codeType: "DCYC"
+              },
+              success: function(e) {
+                console.log(e);
+                var list_Exceptions = e.data.data.data;
+                var display_val_list = [];
+                var qi_ta = '';
+                if (list_Exceptions.length != 0 && list_Exceptions.length != undefined) {
+                  for (var s = 0; s < list_Exceptions.length; s++) {
+                    if (list_Exceptions[s].displayValue == '其他') { //
+                      qi_ta = list_Exceptions[s].displayValue;
+                      continue;
+                    }
+                    display_val_list.push(list_Exceptions[s].displayValue)
+                  }
+                  display_val_list.unshift(qi_ta);
+                }
+                that.data.dis_val_list = display_val_list;
+                that.setData({
+
+                  picker1Range: display_val_list
+                })
+              }
+            })
+            if (e.data.isSuccess == 'N') {
+              wx.showToast({
+                title: '单号不存在或失效',
+                icon: 'loading',
+                duration: 3000
+              })
+              that.setData({
+                val: ''
+              })
+
+            } else {
+
+              //进行数据的传递查看是否能后传来数据
+              var s_obj = e.data.data.data;
+              var size = s_obj.length;
+              if (size == 1) { //如果是一则进行数据的跳转
+
+
+                var foreightNo_s = '';
+                if (s_obj[0].foreightNo == undefined) {
+                  foreightNo_s = '';
+                } else {
+
+                  foreightNo_s = s_obj[0].foreightNo;
+                }
+                //新添加的signNo 
+                var signNo_s = '';
+                if (s_obj[0].signNo == undefined) {
+                  signNo_s = '';
+                } else {
+
+                  signNo_s = s_obj[0].signNo;
+                }
+                var consignee_s = '';
+                if (s_obj[0].consignee == undefined) {
+                  consignee_s = '';
+                } else {
+
+                  consignee_s = s_obj[0].consignee;
+                }
+
+                var consigneeAdr_s = '';
+                if (s_obj[0].consigneeAdr == undefined) {
+                  consigneeAdr_s = '';
+                } else {
+
+                  consigneeAdr_s = s_obj[0].consigneeAdr;
+                }
+
+                var actualTotalPieces_s = '';
+                if (s_obj[0].actualTotalPieces == undefined) {
+                  actualTotalPieces_s = '';
+                } else {
+
+                  actualTotalPieces_s = s_obj[0].actualTotalPieces;
+                }
+
+                var actualTotalVolume_s = '';
+                if (s_obj[0].actualTotalVolume == undefined) {
+                  actualTotalVolume_s = '';
+                } else {
+
+                  actualTotalVolume_s = s_obj[0].actualTotalVolume;
+                }
+
+                var actualTotalWeight_s = '';
+                if (s_obj[0].actualTotalWeight == undefined) {
+
+                  actualTotalWeight_s = '';
+                } else {
+
+                  actualTotalWeight_s = s_obj[0].actualTotalWeight;
+                }
+                //+++++
+                var deliverAddressLimit_s = '';
+                if (s_obj[0].deliverAddressLimit == undefined) {
+
+                  deliverAddressLimit_s = '';
+                } else {
+
+                  deliverAddressLimit_s = s_obj[0].deliverAddressLimit;
+                }
+
+                var deliverAddressTypeCode_s = '';
+                if (s_obj[0].deliverAddressTypeCode == undefined) {
+
+                  deliverAddressTypeCode_s = '';
+                } else {
+
+                  deliverAddressTypeCode_s = s_obj[0].deliverAddressTypeCode;
+                }
+                var deliverTimeRequest_s = '';
+                if (s_obj[0].deliverTimeRequest == undefined) {
+
+                  deliverTimeRequest_s = '';
+                } else {
+
+                  deliverTimeRequest_s = s_obj[0].deliverTimeRequest;
+                }
+                var isHaveDischagreTools_s = '';
+                if (s_obj[0].isHaveDischagreTools == undefined) {
+
+                  isHaveDischagreTools_s = '';
+                } else {
+
+                  isHaveDischagreTools_s = s_obj[0].isHaveDischagreTools;
+                }
+                //
+                var crd_s = '';
+                if (s_obj[0].crd == undefined) {
+
+                  crd_s = '';
+                } else {
+                  var oldTime = s_obj[0].crd;
+                  var newTime = new Date(oldTime);
+                  var y = newTime.getFullYear();
+                  var m = newTime.getMonth() + 1;
+                  if (m < 10) {
+                    m = "0" + m;
+                  }
+
+                  var d = newTime.getDate();
+                  if (d < 10) {
+                    d = "0" + d;
+                  }
+
+                  var h = newTime.getHours();
+                  if (h < 10) {
+                    h = "0" + h;
+                  }
+
+                  var M = newTime.getMinutes();
+                  if (M < 10) {
+                    M = "0" + M;
+                  }
+
+                  var s = newTime.getSeconds();
+                  if (s < 10) {
+                    s = "0" + s;
+                  }
+
+                  var val_s = y + "/" + m + "/" + d + " " + h + ":" + M + ":" + s;
+                  crd_s = val_s;
+
+                }
+                var customerRemarks_s = '';
+                if (s_obj[0].customerRemarks == undefined) {
+
+                  customerRemarks_s = '';
+                } else {
+
+                  customerRemarks_s = s_obj[0].customerRemarks;
+                }
+                that.setData({
+                  foreightNo: foreightNo_s,
+                  signNo: signNo_s,
+                  consignee: consignee_s,
+                  consigneeAdr: consigneeAdr_s,
+                  actualTotalPieces: actualTotalPieces_s,
+                  actualTotalVolume: actualTotalVolume_s,
+                  actualTotalWeight: actualTotalWeight_s,
+                  deliverAddressLimit: deliverAddressLimit_s,
+                  deliverAddressTypeCode: deliverAddressTypeCode_s,
+                  deliverTimeRequest: deliverTimeRequest_s,
+                  isHaveDischagreTools: isHaveDischagreTools_s,
+                  // customerRemarks  crd
+                  crd: crd_s,
+                  customerRemarks: customerRemarks_s
+                })
+                //进行异常数据的异步请求
+                var p_no = that.data.foreightNo;
+                console.log("第二次请求");
+                console.log(p_no);
+                var sign_No = that.data.signNo;
+                var array_erro = [];
+                var latitude_wd = that.data.latitude; //纬度
+                console.log(latitude_wd);
+                var longitude_jd = that.data.longitude; //经度
+                console.log(longitude_jd);
+                //此处是进行图片的下载
+                var img_leng = s_obj[0].url;
+                let test_imageList = new Array();
+                for (var i = 0; i < img_leng.length; i++) {
+                  console.log("是我空数组");
+                  console.log(test_imageList);
+                  var URL = app.getBaseUrl() + 'service/file/getFileFromMongo/oms.pic.fs/' + img_leng[i];
+                  wx.downloadFile({
+                    url: URL,
+                    type: 'image',
+                    success: function(res) {
+                      console.log(res);
+                      var filePath = res.tempFilePath
+                      test_imageList = test_imageList.concat(filePath);
+                      console.log(test_imageList);
+                      that.setData({
+                        images_1: test_imageList
+                      });
+                    }
+                  });
+                }
+                //此处是进行图片的下载
+                wx.request({
+                  url: app.getBaseUrl() + 'service/wechat_QueryArrayErrorInfon',
+                  method: "POST",
+                  async: false,
+                  data: {
+                    serviceData: p_no
+                  },
+                  success: function(scend) {
+                    let array_erro = JSON.stringify(scend.data);
+                    if (array_erro !== undefined && array_erro != '') {
+                      var signNo_s = '';
+                      if (that.data.signNo == undefined) {
+                        signNo_s = '';
+                      } else {
+                        signNo_s = that.data.signNo;
+                      }
+                      var consignee_s = '';
+                      if (that.data.consignee == undefined) {
+                        consignee_s = '';
+                      } else {
+                        consignee_s = that.data.consignee;
+                      }
+                      var consigneeAdr_s = '';
+                      if (that.data.consigneeAdr == undefined) {
+                        consigneeAdr_s = '';
+                      } else {
+                        consigneeAdr_s = that.data.consigneeAdr;
+                      }
+                      var actualTotalPieces_s = '';
+                      if (that.data.actualTotalPieces == undefined) {
+                        actualTotalPieces_s = '';
+                      } else {
+                        actualTotalPieces_s = that.data.actualTotalPieces;
+                      }
+                      var actualTotalVolume_s = '';
+                      if (that.data.actualTotalVolume == undefined) {
+                        actualTotalVolume_s = '';
+                      } else {
+                        actualTotalVolume_s = that.data.actualTotalVolume;
+                      }
+                      var actualTotalWeight_s = '';
+                      if (that.data.actualTotalWeight == undefined) {
+                        actualTotalWeight_s = '';
+                      } else {
+                        actualTotalWeight_s = that.data.actualTotalWeight;
+                      }
+                      var display_val_list = that.data.dis_val_list;
+                      that.setData({
+                        picker1Value: 0,
+                        picker1Range: display_val_list
+                      })
+                    }
+                  }
+                })
+
+                //第二次请求完成
+              }
+            }
+          }
+        })
+      },
+      fail: function(error) {
+        console.log(error)
+
+      }
+    })
+
+
+  },
+
+  onLoad: function(option) {
+    that = this;
+
+    // foreightNo = option.foreightNo
+    /* 获取定位地理位置 */
+    // 新建bmap对象   
+    var BMap = new bmap.BMapWX({
+      // ak: that.data.ak
+      ak: app.getBMapAk()
+    });
+    var fail = function(data) {
+      console.log(data);
+    };
+    var success = function(data) {
+      //返回数据内，已经包含经纬度  
+      //使用wxMarkerData获取数据  
+      wxMarkerData = data.wxMarkerData;
+      longitude_s = wxMarkerData[0].latitude;
+      longitude_s = wxMarkerData[0].longitude
+      //把所有数据放在初始化data内  
+      that.setData({
+        markers: wxMarkerData,
+        latitude: wxMarkerData[0].latitude,
+        longitude: wxMarkerData[0].longitude,
+        address: wxMarkerData[0].address,
+        cityInfo: data.originalData.result.addressComponent,
+        foreightNo: '',
+        signNo: '',
+        consignee: '',
+        consigneeAdr: '',
+        actualTotalPieces: '',
+        actualTotalVolume: '',
+        actualTotalWeight: '',
+        deliverAddressLimit: '',
+        deliverAddressTypeCode: '',
+        deliverTimeRequest: '',
+        isHaveDischagreTools: '',
+        crd: '',
+        customerRemarks: ''
+      });
+    }
+    // 发起regeocoding检索请求   
+    BMap.regeocoding({
+      fail: fail,
+      success: success
+    });
+
+  },
+  go: function(e) {
+    // console.log(e.currentTarget);
+  },
+  jumpToMyPage: function(e) {
+    var that = this;
+    var foreightNo_sl = that.data.foreightNo;
+    if (e.currentTarget.dataset.type == '上传') { //此处是上传功能
+			
+				var p_no = this.data.foreightNo;
+				var sign_No = this.data.signNo;
+				var array_erro = [];
+				var latitude_wd = that.data.latitude; //纬度
+				var longitude_jd = that.data.longitude; //经度
+				that.submit();
+			
+      
+    } else {
+			
+				wx.showActionSheet({
+					itemList: ['从相册中选择', '拍照'],
+					itemColor: "#CED63A",
+					success: function (res) {
+						if (res.tapIndex == 0) {
+							that.chooseWxImage('album') //c
+						} else if (res.tapIndex == 1) {
+							that.chooseWxImage('camera') //照相机
+						}
+					}
+				})
+			
+      
+    }
+  },
+  chooseWxImage: function(type) {
+    const ctx = wx.createCanvasContext('photo_canvas')
+    wx.chooseImage({ //图片
+      sizeType: ['original', 'compressed'],
+      sourceType: [type],
+      success: function(res) {
+        var sizekb = res.tempFiles[0].size / 1000;
+        var tempFilePaths = res.tempFilePaths;
+        images: that.data.images.concat(tempFilePaths);
+        console.log(sizekb + 'kb');
+        //判断机型
+        var model = "";
+        wx.getSystemInfo({
+          success: function(res) {
+            model = res.model;
+          }
+        })
+        if (model.indexOf("iPhone") <= 0) {
+          console.log(tempFilePaths.toString())
+          that.setData({
+            images: that.data.images.concat(tempFilePaths)
+          });
+        } else {
+          wx.getImageInfo({
+            src: tempFilePaths.toString(),
+            success: (res) => {
+              console.log(res.width);
+              console.log(res.height);
+              that.setData({
+                ctx_width: res.width,
+                ctx_height: res.height
+              })
+              if (sizekb > 1000) {
+                let w_with_h = res.width / res.height
+                ctx.drawImage(tempFilePaths[0], 0, 0, res.width, res.height)
+
+                //保存图片
+                setTimeout(() => {
+                  wx.canvasToTempFilePath({
+                    x: 0,
+                    y: 0,
+                    width: res.width,
+                    height: res.height,
+                    destWidth: res.width / 2,
+                    destHeight: res.height / 2,
+                    canvasId: 'photo_canvas',
+                    quality: 0.8,
+                    fileType: 'jpg',
+                    success: function(res) {
+                      //console.log(res.tempFilePath)
+                      let temp_arr = []
+                      temp_arr.push(res.tempFilePath);
+                      console.log(temp_arr.toString());
+                      that.setData({
+                        images: that.data.images.concat(temp_arr)
+                      });
+                    }
+                  })
+                }, 500)
+
+                ctx.draw()
+
+              } else {
+
+              }
+            }
+          })
+          //  that.setData({
+          //    images: that.data.images.concat(tempFilePaths)
+          //  });
+
+        }
+      },
+      fail: function(resc) {}
+    })
+
+
+  },
+  previewImage: function(e) {
+    // 预览图集
+    var current = e.target.dataset.src;
+    wx.previewImage({
+      current: current,
+      urls: that.data.images
+    });
+  },
+  previewImage_1: function(e) {
+    // 预览图集
+    var current = e.target.dataset.src;
+    wx.previewImage({
+      current: current,
+      urls: that.data.images_1
+    });
+  },
+  delete: function(e) {
+    var index = e.currentTarget.dataset.index;
+    var images = that.data.images;
+    images.splice(index, 1);
+    that.setData({
+      images: images
+    });
+  },
+  submit: function() {
+    var foreightNo_uv = that.data.foreightNo;
+    var signNo = that.data.signNo;
+    var tempFilePaths = that.data.images;
+    var num_no = tempFilePaths.length;
+    var s = that.data.showView
+    var latitude_wd = that.data.latitude; //纬度
+    var longitude_jd = that.data.longitude; //经度
+    var tempFilePaths = that.data.images;
+    var radioValue_s = that.data.radio_Values;
+    if (radioValue_s == undefined) {
+      radioValue_s = 'Normal';
+    }
+    var remark_val = that.data.exception_Remark; //异常原因
+    var select_er = that.data.picker1Value; //选中的第几个
+    var select_er1 = that.data.picker1Range; //异常数组
+    var selector_value = select_er1[select_er]; //异常原因选择
+    if (foreightNo_uv == undefined || foreightNo_uv == '') {
+      wx.showToast({
+        title: '请输入或扫描单号',
+        icon: 'loading',
+        duration: 3000,
+      })
+      return;
+    }
+    var attachmentsIds = "";
+    if (radioValue_s == 'Normal') { //正常的上传图片
+      if (num_no == 0) {
+        wx.showToast({
+          title: '请添加照片',
+          icon: 'loading',
+          duration: 3000,
+        })
+      } else {
+        if (s) {
+
+          that.setData({
+            showView: (!that.data.showView),
+
+          })
+          wx.showToast({
+            title: '上传中..',
+            icon: 'loading',
+            duration: 60000,
+          })
+
+          // that.toUploadFile(tempFilePaths, foreightNo_uv, num_no, signNo, latitude_wd, longitude_jd);
+          that.toUploadFile(tempFilePaths, foreightNo_uv, num_no, signNo, latitude_wd, longitude_jd, attachmentsIds);
+
+        }
+      }
+    } else { //异常的上传图片
+
+      if (selector_value == '其他') {
+        if (remark_val == undefined || remark_val == '') {
+          wx.showToast({
+            title: '请写详细原因',
+            duration: 2500
+
+          })
+          return;
+        }
+      }
+      if (num_no == 0) {
+        wx.showToast({
+          title: '请添加照片',
+          icon: 'loading',
+          duration: 3000,
+        })
+      } else { //此处是有照片的
+
+        if (s) {
+          wx.showToast({
+            title: '上传中..',
+            icon: 'loading',
+            duration: 6000,
+          })
+
+          // that.toUploadExceptionFile(tempFilePaths, num_no, remark_val, selector_value, foreightNo_uv, signNo, latitude_wd, longitude_jd);
+          that.toUploadExceptionFile(tempFilePaths, num_no, remark_val, selector_value, foreightNo_uv, signNo, latitude_wd, longitude_jd, attachmentsIds);
+        }
+      }
+    }
+
+  },
+
+  //最新版本的上传功能
+  toUploadFile: function(tempFilePaths, foreightNo_uv, num_no, signNo, latitude_wd, longitude_jd, attachmentsIds) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_saveSignFile',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: {
+        'foreightNo': foreightNo_uv,
+        'signNo': signNo,
+        'number_NO': num_no,
+        'latitude': latitude_wd,
+        'longitude': longitude_jd,
+        'attachmentsIds': attachmentsIds
+      },
+      success: function(c) {
+        console.log(c);
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') { //上传成功
+          tempFilePaths.splice(0, 1);
+          num_no = tempFilePaths.length;
+          if (attachmentsIds != "") {
+            attachmentsIds = attachmentsIds + ',' + v_obj.data; //上传的文件名称
+          } else {
+            console.log(v_obj.data);
+            attachmentsIds = v_obj.data; //上传的文件名称
+          }
+          if (num_no == 0) { //当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function() {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({
+                  delta: 1
+                });
+              }
+            }, 3000);
+          } else {
+            that.toUploadFile(tempFilePaths, foreightNo_uv, num_no, signNo, latitude_wd, longitude_jd, attachmentsIds);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  }, //完
+  uploadDIY: function() {
+    wx.uploadFile({
+      url: uploadUrl,
+      filePath: filePaths[i],
+      name: 'fileData',
+      formData: {
+        'pictureUid': owerId,
+        'pictureAid': albumId
+      },
+      success: (resp) => {
+        successUp++;
+      },
+      fail: (res) => {
+        failUp++;
+      },
+      complete: () => {
+        i++;
+        if (i == length) {
+          this.showToast('总共' + successUp + '张上传成功,' + failUp + '张上传失败！');
+        } else { //递归调用uploadDIY函数
+          this.uploadDIY(filePaths, successUp, failUp, i, length);
+        }
+      },
+    });
+  },
+
+  //最新版本的上传功能
+  toUploadExceptionFile: function(tempFilePaths, num_no, remark_val, selector_value, foreight_NO, signNo, latitude_wd, longitude_jd, attachmentsIds) {
+    wx.uploadFile({
+      url: app.getBaseUrl() + 'service/wechat-app/upload-file/wechat_signFileAbNomal',
+      filePath: tempFilePaths[0],
+      header: {
+        'content-type': 'multipart/form-data'
+      },
+      name: "file",
+      formData: {
+        'foreightNo': foreight_NO,
+        'signNo': signNo,
+        'number_NO': num_no,
+        'latitude': latitude_wd,
+        'longitude': longitude_jd,
+        'attachmentsIds': attachmentsIds,
+        'serviceremark': remark_val,
+        'serviceSelect': selector_value,
+      },
+      success: function(c) {
+        console.log(c);
+        var v_obj = JSON.parse(c.data);
+        if (v_obj.isSuccess == 'Y') { //上传成功
+          tempFilePaths.splice(0, 1);
+          num_no = tempFilePaths.length;
+          if (attachmentsIds != "") {
+            attachmentsIds = attachmentsIds + ',' + v_obj.data; //上传的文件名称
+          } else {
+            console.log(v_obj.data);
+            attachmentsIds = v_obj.data; //上传的文件名称
+          }
+          if (num_no == 0) { //当数组中的长度等于0时候提示
+            wx.hideLoading();
+            wx.showToast({
+              title: '操作成功',
+              icon: 'success',
+              duration: 3000,
+            });
+            setTimeout(function() {
+              var pagelist = getCurrentPages();
+              if (pagelist.length > 1) {
+                wx.navigateBack({
+                  delta: 1
+                });
+              }
+            }, 3000);
+          } else {
+            that.toUploadExceptionFile(tempFilePaths, num_no, remark_val, selector_value, foreight_NO, signNo, latitude_wd, longitude_jd, attachmentsIds);
+          }
+        } else {
+          if (v_obj.isSuccess == 'N') {
+            var msg = v_obj.data;
+            wx.showToast({
+              title: msg,
+              icon: 'none',
+              duration: 3000
+            })
+          }
+        }
+      }
+    });
+  }, //完
+})

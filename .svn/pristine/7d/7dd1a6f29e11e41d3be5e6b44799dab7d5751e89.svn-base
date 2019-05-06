@@ -1,0 +1,154 @@
+// var auth_conf = require('../../utils/auth.js');
+const app = getApp();
+Page({
+    data: {
+      enableOperate: true, //权限控制，用户需要先绑定
+      rolename: "",
+      navs: [{
+          text: '设备管理', //background:#673AB7;
+          ys: "iconfont icon-alarn",
+        styles: "font-size:60rpx; color:#fff; width:97%; height:95%;border-radius:20%"
+          // styles: "font-size:60rpx; color:#fff; width:99.5%; height:95%;"
+        },
+         {
+          text: '轨迹回放', //background:#03a9f4;
+          ys: "iconfont icon-elelock",
+           styles: "font-size:60rpx; color:#fff;  width:97%; height:95%;border-radius:20%"
+        }, 
+        {
+          text: '报警记录', //background:#03a9f4;
+          ys: "iconfont icon-log",
+          styles: "font-size:60rpx; color:#fff;  width:97%; height:95%;border-radius:20%"
+        },
+        {
+          text: '实时监控', //background:#03a9f4;
+          ys: "iconfont icon-locus",
+          styles: "font-size:60rpx; color:#fff;  width:97%; height:95%;border-radius:20%"
+        }
+       
+      ],
+      alarmButton: '',
+      elockButton: '',
+      trackButton: '',
+      elockLogButton: '',
+    },
+
+    onLoad: function() {
+
+    },
+    onShow: function() {
+
+      var openid = wx.getStorageSync("openid");
+      var isLogin = wx.getStorageSync('login');
+      if (openid) {
+        const that = this;
+        if (isLogin && isLogin == "true") {
+          wx.request({
+            // url: app.getTmsUrl() + 'Wechat_alreadyBindOpenid',
+            url: app.getSysUrl() + 'Wechat_alleadyBindOpenId',
+            method: "POST",
+            data: {
+              openid: openid
+            },
+            success: function(e) {
+              if (e.data.data.isSuccess == 'Y') {
+                console.log(e.data.data.data.userinfo.roleName)
+
+
+                that.setData({
+                  enableOperate: true,
+                  rolename: e.data.data.data.userinfo.roleName
+                });
+
+                wx.setStorageSync("userinfo", e.data.data.data.userinfo);
+                wx.setStorageSync("authority", e.data.data.data.authority);
+                that.setData({
+                  alarmButton: e.data.data.data.authority.alarmHandle.alarmAccess,
+                  elockButton: e.data.data.data.authority.eLock.eLockAccess,
+                  trackButton: e.data.data.data.authority.trackQuery.trackAccess,
+                  elockLogButton: e.data.data.data.authority.eclockLog.elockLogSearch
+                })
+                console.log(e.data.data.data.userinfo);
+                console.log(e.data.data.data.authority);
+              } else {
+
+              }
+            }
+          });
+        }
+        this.setData({
+          enableOperate: false
+        })
+      } else {
+        this.setData({
+          enableOperate: false
+        })
+      }
+    },
+    onShareAppMessage:function(){
+      return {
+        title:'中国外运物联网监控平台',
+        path:'pages/tms/tms'
+      }
+    },
+    takeAction: function(e) {
+      var btn_type = e.currentTarget.dataset.type
+      if (this.data.rolename == null) {
+        wx.showToast({
+          title: '角色信息错误，请检查!',
+          icon: 'none',
+          duration: 3000
+        });
+        return;
+      } else {
+        if (btn_type == '设备管理') {
+          wx.navigateTo({
+            // url: './dealWarn/dealWarn',
+            url:'./deviceManage/deviceManage'
+          })
+        } else if (btn_type == '实时监控') {//&& this.data.enableOperate
+          wx.navigateTo({
+            url: './trackQuery/trackQuery',
+          })
+        } else if (btn_type == '报警记录') {
+          wx.navigateTo({
+            url: './elecLockOperLog/elecLockOperLog',
+          })
+        } else if (btn_type == '轨迹回放') {
+          wx.navigateTo({
+            // url: './trackQuery/map/map',
+            url:'./trackQuery/searchMap/searchMap'
+          })
+        } else if (btn_type == '数据看板' && this.data.enableOperate) {
+          let openid = wx.getStorageSync('openid');
+          console.log(openid)
+          wx.navigateToMiniProgram({
+            appId: 'wxa3dc88161abce04f',
+            path: '',
+            extraData: {
+              oppenid: openid
+            },
+            envVersion: 'release',
+            success(res) {
+              // 打开成功
+            }
+          })
+        } else if (!this.data.enableOperate) {
+          wx.showToast({
+            title: '该功能尚未开放!',
+            icon: 'none',
+            duration: 3000
+          });
+        } else {
+          wx.showToast({
+            title: '无权限！',
+            icon: 'none',
+            duration: 3000
+          });
+        }
+      }
+
+    }
+  }
+
+)

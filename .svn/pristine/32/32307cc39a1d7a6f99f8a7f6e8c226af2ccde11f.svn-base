@@ -1,0 +1,58 @@
+<!-- connect.wxml -->
+<view class="container1">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;position:fixed;top:0;width:100%;background:#fff;z-index:10;">
+    <input type="text" bindinput="inputCodeHandler" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入签收单或者货运单号、终端号" value="{{inputCode}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="searchHandler"></text>
+      <text class="iconfont icon-saomiao" bindtap="scanHandler"></text>
+    </view>
+  </view>
+</view>
+<checkbox-group bindchange="checkboxChange" style="margin-top:90rpx;margin-bottom:90rpx">
+  <block wx:for-items="{{list}}" wx:key="{{index}}">
+    <view class="flex item">
+      <view class="flex_auto item_middle">
+        <view>
+          任务单号:
+          <text class="detail">{{item.SUB_ORDER_NO}}</text>
+        </view>
+        <view>
+          签收单号:
+          <text class="detail">{{item.SIGN_NO}}</text>
+        </view>
+        <view>
+          终端号:
+          <text class="detail">{{item.TERMINAL_NO}}</text>　　总件数:
+          <text class="detail">{{item.ACTUAL_TOTAL_PIECES}}</text>
+        </view>
+        <view>
+          总体积:
+          <text class="detail">{{item.ACTUAL_TOTAL_VOLUME}}</text> m³ 　　总重量:
+          <text class="detail">{{item.ACTUAL_TOTAL_WEIGHT}}</text> kg
+        </view>
+        <view>
+          上传状态:
+          <text class="detail">{{item.UPLOAD_STATUS}}</text>
+        </view>
+        <view>
+          收货地址:
+          <text class="detail">{{item.CONSIGNEE_ADR}}</text>
+        </view>
+        <view class="{{item.TERMINAL_NO!='未绑定'?'viewShow':'viewHide'}}">
+          <button type="default" size="mini" bindtap='doUploading' data-statue="{{item.UPLOAD_STATUS}}" data-id="{{item.OMS_SUB_ORDER_TMS_ID}}" data-terminal="{{item.TERMINAL_NO}}">{{item.UPLOAD_STATUS=='上传成功'?'取消上传':'上传'}}</button>
+					<button type="default" size="mini" bindtap='unbinding' class="{{item.UPLOAD_STATUS=='未上传'||item.UPLOAD_STATUS=='上传失败'?'show':'hide'}}" data-id="{{item.OMS_SUB_ORDER_TMS_ID}}">解绑</button>
+          
+        </view>
+      </view>
+      <view class="item_right">
+        <view>
+          <view class="action">
+            <checkbox disabled='{{item.DISABLED}}' checked='{{item.STATUE}}' value="{{item.OMS_SUB_ORDER_TMS_ID}}" class="{{item.TERMINAL_NO=='未绑定'?'show':'hide'}}" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+	
+</checkbox-group>
+<view class="quickUp {{btnshow == 1 ?'quickUp1':'quickUp2'}}"  bindtap='quickUpload'>一键上传</view>

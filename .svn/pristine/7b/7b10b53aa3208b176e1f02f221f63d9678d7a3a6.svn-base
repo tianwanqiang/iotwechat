@@ -1,0 +1,118 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="noBindinput" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入配载单号或车牌号" value="{{no}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="jumpTo_sousuo"></text>
+      <text class="iconfont icon-saomiao" bindtap="jumpTo_saomiao"></text>
+    </view>
+  </view>
+</view>
+<view class="container_name">
+  <view class="classname" style="font-size:14px;font-family:Microsoft YaHei;border-bottom:1px solid #ddd;">
+    <span >
+      <view style="margin:10px 0px 10px 0px;">配载单号：{{attemperNo}} </view>
+    </span>
+    <span class='flex1'>
+      <view style="margin:10px 0px 10px 0px;display:flex;">司机姓名：</view>
+			<input type="text" style='display:block;' data-params='name' value=' {{driver}}' placeholder='姓名' bindinput='inputSet' />
+    </span>
+    <span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;">司机电话：  </view>
+			<input type="number" style='display:block;' data-params='phonenumber' value=' {{driverTel}}' placeholder='电话' bindinput='inputSet' />
+    </span>
+		<span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;">身份证号：  </view>
+			<input type="number" style='display:block' data-params='idnumber' value=' {{driverIdcard}}'  placeholder='身份证' bindinput='inputSet' />
+    </span>
+    <span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;text-transform:uppercase" name="textfield"  >车牌号码： </view>
+			<input type="text" style='display:block;' data-params='carnumber' value=' {{vehicleNo}}'  placeholder='车牌号码' bindinput='inputSet' />
+    </span>
+    <span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;">终端编号：{{terminalNo}} </view>
+    </span>
+    <view class="{{unbindingDisabled?'hide':'show'}}">
+    <button type="default"  size="mini" bindtap='unbind'>解除绑定</button>
+    </view>
+    <span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;"> 调度状态：{{scheduleStatusName}} </view>
+    </span>
+    <span  class='flex1'>
+      <view style="margin:10px 0px 10px 0px;"> 发车时间：{{atd}} </view>
+    </span>
+    <span class='flex1' >
+      <view style="margin:10px 0px 10px 0px;"> 上传状态：{{uploadStatus}} 
+      </view>
+    </span>
+    
+    <label hidden='true'>{{omsAttemperId}}</label>
+    <label hidden='true'>{{stowageType}}</label>
+  </view>
+</view>
+
+
+<view class="container_name">
+  <view class="section index-nav">
+
+    <view class="btn-list" bindtap="onbindtap" data-type="{{departText}}">
+      <span class="iconfont icon-depart"></span>
+      <text>{{departText}}</text>
+    </view>
+     <view class="btn-list" bindtap="onbindtap" data-type="{{uploadText}}">
+      <span class="iconfont icon-shangchuan"></span>
+      <text>{{uploadText}}</text>
+    </view>
+    <view class="btn-list" bindtap="validateTemNo">
+      <span class="iconfont icon-check"></span>
+      <text>终端校验</text>
+    </view>
+  </view>
+</view>
+
+<view class='animation-box'>
+  <view class='time-crl-path'></view>
+  <view class='crl-dot' animation='{{dotAnData}}'></view>
+</view>
+
+<view class="free-dialog {{ showDialog ? 'free-dialog--show' : '' }}">
+  <view class="free-dialog__mask" bindtap="toggleDialog" />
+  <view class="free-dialog__container">
+    <view style="padding: 5% 5% 5%;">
+      <form bindsubmit='submit' bindreset="reset">
+        <view bindtap='freetoBack' class="free-button free-dialog-reset">取消</view>
+        <view bindtap='freeBack' class="free-button free-dialog-submit">确定</view>
+        <scroll-view scroll-y='true'>
+          <radio-group class='free-radios' bindchange="radioChange" style="height:{{scrollHeight1}}px">
+            <label class="free-radio" bindtap="click" wx:for="{{picker1Range}}" wx:key="{{picker1Range}}" data-id="{{index}}" style="{{index==id?'background:#48c23d;color:#fff;':'background:#fff;color:#000;'}}">
+              <radio value="{{picker1Range[index].attemperNo}}" name="{{picker1Range[index].attemperNo}}"></radio>
+              <label class="free-text">{{picker1Range[index].attemperNo}}</label>
+            </label>
+          </radio-group>
+        </scroll-view>
+      </form>
+
+    </view>
+  </view>
+</view>
+
+<view class="{{showHiden?'show':'hide'}}">
+  <view class="container_name">
+    <view class="classname" style="border-bottom:1px solid #ddd;">
+      <span >
+        <view style="margin:10px 0px 10px 0px;">距离发货点：{{distane}} 公里 </view>
+      </span>
+      <span >
+        <view style="margin:10px 0px 10px 0px;">当前位置： {{place}} </view>
+      </span>
+      <span >
+        <view style="margin:10px 0px 10px 0px;">最后定位时间： {{lastSynchDate}} </view>
+      </span>
+      <span >
+        <view style="margin:10px 0px 10px 0px;">设备状态： {{isOnline}} </view>
+      </span>
+      <span >
+        <view style="margin:10px 0px 10px 0px;">设备电量： {{electricity}}% </view>
+      </span>
+    </view>
+  </view>
+</view>

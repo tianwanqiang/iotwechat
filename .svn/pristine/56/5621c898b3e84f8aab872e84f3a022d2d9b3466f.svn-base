@@ -1,0 +1,118 @@
+<view class="page">
+  <view class="page__bd">
+    <view class="weui-tab">
+      <view class="weui-navbar">
+        <block wx:for="{{tabs}}" wx:key="*this">
+          <view id="{{index}}" class="weui-navbar__item {{activeIndex == index ? 'weui-bar__item_on' : ''}}" bindtap="tabClick">
+            <view class="weui-navbar__title">{{item}}</view>
+          </view>
+        </block>
+        <view class="weui-navbar__slider" style="left: {{sliderLeft}}px; transform: translateX({{sliderOffset}}px); -webkit-transform: translateX({{sliderOffset}}px);"></view>
+      </view>
+      <view class="weui-tab__panel">
+        <view class="weui-tab__content" hidden="{{activeIndex != 1}}">
+        <!--车牌号开始-->
+
+          <view class="weui-search-bar">
+            <view class="weui-search-bar__form">
+              <view class="weui-search-bar__box">
+                <icon class="weui-icon-search_in-box" type="search" size="14"></icon>
+                <input type="text" class="weui-search-bar__input" placeholder="搜索" value="{{inputValCar}}" focus="{{inputShowedCar}}" bindinput="inputTypingCar" />
+                <view class="weui-icon-clear" wx:if="{{inputValCar.length > 0}}" bindtap="clearInputCar">
+                  <icon type="clear" size="14"></icon>
+                </view>
+              </view>
+              <label class="weui-search-bar__label" hidden="{{inputShowedCar}}" bindtap="showInputCar">
+                <icon class="weui-icon-search" type="search" size="14"></icon>
+                <view class="weui-search-bar__text">车牌号</view>
+              </label>
+            </view>
+            <view class="weui-search-bar__cancel-btn" hidden="{{!inputShowedCar}}" bindtap="hideInputCar">取消</view>
+          </view>
+           
+ <!--车牌号复选框-->
+  <view class="weui-cells weui-cells_after-title">
+            <checkbox-group bindchange="checkboxChangeCar" style="margin-bottom: 80rpx;">
+                <label class="weui-cell weui-check__label" wx:for="{{checkboxItemsCar}}" wx:key="deviceName">
+                    <view><checkbox class="weui-check" value="{{item.deviceName}}" checked="{{item.checked}}"/></view>
+                     <!-- <label class="iconfont icon-check"  size="90" wx:if="{{item.checked}}"></label> -->
+                    <view class="weui-cell__hd weui-check__hd_in-checkbox">
+                        
+                         <icon class="weui-icon-checkbox_circle" type="circle" size="23" wx:if="{{!item.checked}}"></icon>
+                        <icon class="weui-icon-checkbox_success" type="success_no_circle" size="23" wx:if="{{item.checked}}" color="#333"></icon> 
+                    </view>
+                    <view class="weui-cell__bd">{{item.deviceName}}</view>
+                </label>
+            </checkbox-group>
+          
+        </view>
+        <!--车牌号复选框结束-->
+ <!--车牌号结束-->
+        </view>
+        <view class="weui-tab__content" hidden="{{activeIndex != 0}}">
+<!--设备号开始-->
+          <view class="weui-search-bar">
+            <view class="weui-search-bar__form">
+              <view class="weui-search-bar__box">
+                <icon class="weui-icon-search_in-box" type="search" size="14"></icon>
+                <input type="text" class="weui-search-bar__input" placeholder="搜索" value="{{inputVal}}" focus="{{inputShowed}}" bindinput="inputTyping" />
+                <view class="weui-icon-clear" wx:if="{{inputVal.length > 0}}" bindtap="clearInput">
+                  <icon type="clear" size="14"></icon>
+                </view>
+              </view>
+              <label class="weui-search-bar__label" hidden="{{inputShowed}}" bindtap="showInput">
+                <icon class="weui-icon-search" type="search" size="14"></icon>
+                <view class="weui-search-bar__text">设备号</view>
+              </label>
+            </view>
+            <view class="weui-search-bar__cancel-btn" hidden="{{!inputShowed}}" bindtap="hideInput">取消</view>
+          </view>
+
+<!--设备号结束-->
+ <!--设备号复选框-->
+  <view class="weui-cells weui-cells_after-title">
+            <checkbox-group bindchange="checkboxChange">
+                <label class="weui-cell weui-check__label" wx:for="{{checkboxItems}}" wx:key="deviceCode">
+                    <checkbox class="weui-check" value="{{item.deviceCode}}" checked="{{item.checked}}"/>
+
+                    <view class="weui-cell__hd weui-check__hd_in-checkbox">
+                        <icon class="weui-icon-checkbox_circle" type="circle" size="23" wx:if="{{!item.checked}}"></icon>
+                        <icon class="weui-icon-checkbox_success" type="success_no_circle" size="23" wx:if="{{item.checked}}" color="#333"></icon>
+                    </view>
+                    <view class="weui-cell__bd">{{item.deviceCode}}</view>
+                </label>
+            </checkbox-group>
+          
+        </view>
+        <!--设备号复选框结束-->
+        </view>
+
+        <view class="weui-tab__content" hidden="{{activeIndex != 2}}">
+          <!--组织结构开始-->
+  <view class="weui-cells weui-cells_after-title">
+            <checkbox-group bindchange="checkboxChangeOrg" style="margin-bottom: 80rpx;">
+                <label class="weui-cell weui-check__label" wx:for="{{checkboxItemsOrg}}" wx:key="orgid">
+                    <view><checkbox class="weui-check" value="{{item.orgid}}" checked="{{item.checked}}"/></view>
+                     <!-- <label class="iconfont icon-check"  size="90" wx:if="{{item.checked}}"></label> -->
+                    <view class="weui-cell__hd weui-check__hd_in-checkbox">
+                        
+                         <icon class="weui-icon-checkbox_circle" type="circle" size="23" wx:if="{{!item.checked}}"></icon>
+                        <icon class="weui-icon-checkbox_success" type="success_no_circle" size="23" wx:if="{{item.checked}}" color="#333"></icon> 
+                    </view>
+                    <view class="weui-cell__bd">{{item.name}}</view>
+                </label>
+            </checkbox-group>
+          
+        </view>
+
+
+        <!--组织结构结束-->
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class='bottomView'>
+ <image src='../../../../Image/GPS.png' bindtap='enterValue'></image>
+  </view>
+</view>

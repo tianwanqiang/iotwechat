@@ -1,0 +1,43 @@
+.user-avatar {
+  width: 461.4rpx;
+  height: 226.2rpx;
+  margin-top: 80rpx;
+}
+
+.containerView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  background-color: #f2f2f2;
+}
+page {
+  height:100%;
+}
+.user-name {
+  margin-top: 50rpx;
+  font-size: 42rpx;
+  font-weight: bold;
+    line-height: 80rpx;
+}
+
+.user-sign {
+  font-size: 35rpx;
+  line-height: 80rpx;
+}
+
+button{
+	font-size: 30rpx;
+	line-height: 80rpx;
+}
+.btn-submit{
+	padding: 20rpx;
+}
+.btn-block{
+	width: 100%;
+	line-height: 88rpx;
+}
+.btn-blue{
+	background: #405f80;
+	color: #fff;
+}

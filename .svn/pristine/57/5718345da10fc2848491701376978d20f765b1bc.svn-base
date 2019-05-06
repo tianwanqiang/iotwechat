@@ -1,0 +1,590 @@
+var util = require('../../../utils/util.js')
+var dateTimePicker = require('../../../utils/dateTimePicker.js')
+const app = getApp();
+var that;
+var arr_old;
+var array_vals;
+var searchPageNum;
+var callbackcount;
+var proArrysData;
+Page({
+  data: {
+    val: '',//14539194803
+    forecast: [],
+    isFromSearch: true, // 用于判断数组是不是空数组，默认true，空的数组
+    searchPageNum: 1, // 设置加载的第几次，默认是第一次  
+    callbackcount: 15, //返回数据的个数  
+    searchLoading: false, //"上拉加载"的变量，默认false，隐藏  
+    searchLoadingComplete: false, //“没有数据”的变量，默认false，隐藏 
+    //hasMoreData: true,
+    //contentlist: [],
+    proArrys: [{ "pmName":"请选择"}], //项目数据源
+    proArrysIndex: 0, //项目下拉选索引
+    items: [
+      { name: '1', value: '签收单' ,checked:'true'},
+      { name: '2', value: '配载单' },
+      { name: '3', value: '设备号' }
+    ],
+    queryIndex:"1",
+    startDate:"请选择",
+    endDate:"请选择",
+    trackBegin:"请选择",
+    trackEnd:"请选择",
+    dateTimeArray: null,
+    dateTime: null,
+    dateTimeArray1: null,
+    dateTime1: null,
+    // trackBeginArray: null,
+    startYear: 2016,
+    endYear: 2050
+  },
+  onLoad: function(options) {
+    var officeCode = wx.getStorageSync("userinfo").officeCode;
+    var that = this;
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_getUserProjectInfo',
+      method: "POST",
+      data: {
+        officeCode: officeCode
+      },
+      success: function(res) {
+
+        if (res.statusCode == 200) {
+          //http状态正常
+          if (res.data.data && res.data.data.isSuccess == "Y") {
+            that.proArrysData = res.data.data.data;
+            //业务状态正常
+            that.setData({
+              proArrys: that.proArrysData
+            })
+
+          }
+        }
+      }
+    })
+    var obj = dateTimePicker.dateTimePicker(this.data.startYear, this.data.endYear);
+    let trackEnd = util.formatTime(new Date);
+    this.setData({
+      dateTime: obj.dateTime,
+      dateTimeArray: obj.dateTimeArray,
+      dateTimeArray1: obj.dateTimeArray,
+      dateTime1: obj.dateTime,
+      trackEnd:trackEnd
+    })
+   
+
+  },
+  changeTrackEndDateTimeColumn(e){
+    var arr = this.data.dateTime1, dateArr = this.data.dateTimeArray1;
+
+    arr[e.detail.column] = e.detail.value;
+    dateArr[2] = dateTimePicker.getMonthDay(dateArr[0][arr[0]], dateArr[1][arr[1]]);
+    let trackEnd = this.newFormatTime(dateArr,arr);
+    this.setData({ 
+      dateTimeArray1: dateArr,
+      dateTime1: arr,
+      trackEnd:trackEnd
+    });
+  },
+  changeTrackBeginDateTimeColumn(e) {
+  
+    var arr = this.data.dateTime, dateArr = this.data.dateTimeArray;
+
+    arr[e.detail.column] = e.detail.value;
+    dateArr[2] = dateTimePicker.getMonthDay(dateArr[0][arr[0]], dateArr[1][arr[1]]);
+    let trackBegin = this.newFormatTime(dateArr,arr);
+    this.setData({ 
+      dateTimeArray: dateArr,
+      dateTime: arr,
+      trackBegin:trackBegin
+    });
+
+    
+   
+  },
+  //滑动查询列表
+  fetchSearchList: function(types) {
+
+    let that = this;
+    let oddNo = that.data.val; //输入框字符串单号作为参数  
+    searchPageNum = that.data.searchPageNum; //把第几次加载次数作为参数  
+    callbackcount = that.data.callbackcount; //返回数据的个数
+    let startDate = that.data.startDate;
+    if(startDate=="请选择"){
+      startDate="";
+    }
+    let endDate = that.data.endDate;
+    if(endDate=="请选择"){
+      endDate="";
+    }
+    let platNo = that.data.platNo; //车牌号
+    let projectId = that.data.proArrys[that.data.proArrysIndex].omsPmId; //项目类型
+    let queryIndex = that.data.queryIndex;
+    wx.request({
+      // url: app.getTmsUrl() + 'wechat_searchDriverByOddNumber',
+      url: app.getBaseUrl() + 'service/wechat_searchDriverByOddNumber',
+      method: "POST",
+      data: {
+        oddNo: oddNo,
+        pageNow: searchPageNum,
+        pageSize: callbackcount,
+        type: types,
+        startDate: startDate,
+        endDate: endDate,
+        vehicleNo: platNo,
+        projectId: projectId,
+        queryType: queryIndex  //查询类型
+      },
+      success: function(res) {
+        var isSuccess = res.data.data.isSuccess;
+        
+        var s_obj = res.data.data.data;
+        if (isSuccess == 'N') {
+          that.setData({
+            val: '',
+            isFromSearch: true, //第一次加载，设置true  
+            searchLoading: false, //把"上拉加载"的变量设为true，显示  
+            searchLoadingComplete: false //把“没有数据”设为false，隐藏
+          });
+          wx.showToast({
+            title: '设备不存在或无数据',
+            icon: 'none',
+            duration: 3000
+          })
+
+          return;
+        }
+        if (isSuccess == 'Y') {
+          if (s_obj.length !== 0 && s_obj.length != undefined) {
+            let searchList = [];
+            //UtilCommon.formatTime(new Date(arrs[0].gpsTime))
+            //如果isFromSearch是true从data中取出数据，否则先从原来的数据继续添加  
+            that.data.isFromSearch ? searchList = s_obj : searchList = that.data.forecast.concat(s_obj);
+
+
+            if (s_obj.length < that.data.callbackcount) {
+              that.setData({
+                val: '',
+                forecast: searchList, //获取数据数组  
+                searchLoadingComplete: true, //把“没有数据”设为true，显示  
+                searchLoading: false
+              });
+            } else {
+              that.setData({
+                val: that.data.val,
+                forecast: searchList, //获取数据数组  
+                searchLoading: true //把"上拉加载"的变量设为false，显示  
+              });
+            }
+          } else {
+            wx.showToast({
+              title: '查询无数据',
+              icon: 'none',
+              duration: 3000
+            })
+            return
+          }
+        }
+
+      },
+      fail: function(err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "none"
+        })
+      }
+    });
+  },
+  attemperNoInput: function(e) {
+    var that = this;
+    that.setData({
+      val: e.detail.value
+    });
+  },
+  //新功能
+  jumpToMyPage_sousuo: function() { //搜索
+    var that = this;
+    that.scan_code();
+  },
+  jumpToMyPage_saomiao: function() { //扫描
+    var that = this;
+    that.scan_code_to();
+  },
+  userNameInput: function(e) {
+    var that = this
+    that.setData({
+      platNo: e.detail.value
+    });
+  },
+  //搜索请求
+  scan_code: function() {
+    var that = this;
+    var str_code = that.data.val;
+    if (str_code == undefined) {
+      str_code = "";
+    }
+
+    var queryType = that.data.queryIndex;
+    if(queryType==3){
+      if (!str_code) {
+        wx.showToast({
+          title: '请输入单号或设备号',
+          icon: "none"
+        })
+        return
+      }
+      // let trackBegin = that.data.trackBegin;
+      // let trackEnd = that.data.trackEnd;
+    let trackBegin = that.data.trackBegin;
+    let trackEnd = that.data.trackEnd;
+  
+      if(!trackBegin){
+        wx.showToast({
+          title: '请输入轨迹开始时间',
+          icon:"none",
+          duration:3000
+        })
+        return
+      }
+      if (!trackEnd) {
+        wx.showToast({
+          title: '请输入轨迹结束时间',
+          icon: "none",
+          duration: 3000
+        })
+        return
+      }
+
+      that.trackQuery(str_code,trackBegin,trackEnd);
+      return
+    }
+   
+    that.setData({
+      searchPageNum: 1, //第一次加载，设置1  
+      forecast: [], //放置返回数据的数组,设为空  
+      isFromSearch: true, //第一次加载，设置true  
+      searchLoading: true, //把"上拉加载"的变量设为true，显示  
+      searchLoadingComplete: false //把“没有数据”设为false，隐藏  
+    })
+    that.fetchSearchList("N");
+  },
+  //实时地图查询功能
+  buttonReal: function(e) {
+    var str;
+    var type_val = e.currentTarget.dataset.type;
+    var arr_vals = this.data.forecast;
+    for (var i = 0; i < arr_vals.length; i++) {
+      if (type_val == arr_vals[i].device_code) {
+        str = arr_vals[i];
+        break;
+      }
+    }
+    var oddNo = str.device_code;
+    var str_val = null;
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_searchDriverByOddNumber',
+      method: "POST",
+      data: {
+        oddNo: oddNo,
+        pageNow: 1,
+        pageSize: 15,
+        type: "Y"
+      },
+      success: function(res) {
+        var isSuccess = res.data.data.isSuccess;
+        var s_obj = res.data.data.data;
+        if (isSuccess == 'N') {
+          wx.showToast({
+            title: '设备无位置数据',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        if (isSuccess == 'Y') {
+          if (s_obj.length !== 0 && s_obj.length != undefined) {
+            str_val = JSON.stringify(s_obj);
+            wx.navigateTo({
+              url: './zoomMap/zoomMap?array=' + str_val,
+            })
+          } else {
+            wx.showToast({
+              title: '设备无位置数据',
+              icon: 'none',
+              duration: 3000
+            })
+            return;
+          }
+        }
+      },
+      fail: function(err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "loading"
+        })
+      }
+    });
+  },
+  buttonTruck: function(e) {
+    var str;
+    var type_val = e.currentTarget.dataset.type; //设备号
+    var arr_vals = this.data.forecast; //查询返回数组
+    for (var i = 0; i < arr_vals.length; i++) {
+      if (type_val == arr_vals[i].device_code) {
+        str = arr_vals[i];
+        break;
+      }
+    }
+    var deviceCode = str.device_code; //设备号
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_searchTrackUrlByDeviceCode', //查询历史轨迹接口url
+      method: "POST",
+      data: {
+        deviceCode: deviceCode
+      },
+      success: function(res) {
+        var isSuccess = res.data.data.isSuccess;
+        var s_obj = res.data.data.data
+        if (isSuccess == 'N') {
+          wx.showToast({
+            title: '设备无位置数据',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        if (isSuccess == 'Y') {
+          if (s_obj.url != undefined && s_obj.url != '') {
+            var urlStr = s_obj.url;
+            app.globalData.urlStr = urlStr;
+            wx.navigateTo({
+              url: './trackMap/trackMap',
+            })
+          } else {
+            wx.showToast({
+              title: '设备无位置数据',
+              icon: 'none',
+              duration: 3000
+            })
+            return;
+          }
+        }
+      },
+      fail: function(err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "loading"
+        })
+      }
+    });
+  },
+  trackQuery:function(oddNo,trackBegin,trackEnd){
+    var str_val = null;
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_searchDriverByDeviceNumber',
+      method: "POST",
+      data: {
+        oddNo: oddNo,
+        pageNow: 1,
+        pageSize: 15,
+        type: "Y",
+        trackBegin:trackBegin,
+        trackEnd:trackEnd
+      },
+      success: function (res) {
+        var isSuccess = res.data.data.isSuccess;
+        var s_obj = res.data.data.data;
+        if (isSuccess == 'N') {
+          wx.showToast({
+            title: '设备无位置数据',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        
+        if (isSuccess == 'Y') {
+          if (s_obj.length !== 0 && s_obj.length != undefined) {
+            str_val = JSON.stringify(s_obj);
+            wx.navigateTo({
+              url: './zoomMap/zoomMap?array=' + str_val,
+            })
+          } else {
+            wx.showToast({
+              title: '设备无位置数据',
+              icon: 'none',
+              duration: 3000
+            })
+            return;
+          }
+        }
+      },
+      fail: function (err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "loading"
+        })
+      }
+    });
+  },
+  scan_code_to: function() {
+    var that = this;
+    wx.scanCode({
+      success: function(result) {
+        var s = result.result;
+        if (s == undefined || s == '') {
+          wx.showToast({
+            title: '请扫描设备号',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        that.setData({
+          searchPageNum: 1, //第一次加载，设置1  
+          forecast: [], //放置返回数据的数组,设为空  
+          isFromSearch: true, //第一次加载，设置true  
+          searchLoading: true, //把"上拉加载"的变量设为true，显示  
+          searchLoadingComplete: false //把“没有数据”设为false，隐藏  
+        })
+        searchPageNum = that.data.searchPageNum; //把第几次加载次数作为参数  
+        callbackcount = that.data.callbackcount; //返回数据的个数
+        wx.request({
+          // url: app.getTmsUrl() + 'wechat_searchDriverByOddNumber',
+          url: app.getBaseUrl() + 'service/wechat_searchDriverByOddNumber',
+          method: "POST",
+          data: {
+            oddNo: s,
+            pageNow: searchPageNum,
+            pageSize: callbackcount,
+            type: "N"
+          },
+          success: function(res) {
+            var isSuccess = res.data.data.isSuccess;
+            console.log(isSuccess);
+            var s_obj = res.data.data.data;
+            if (isSuccess == 'N') {
+              that.setData({
+                val: '',
+                isFromSearch: true, //第一次加载，设置true  
+                searchLoading: false, //把"上拉加载"的变量设为true，显示  
+                searchLoadingComplete: false //把“没有数据”设为false，隐藏
+              });
+              wx.showToast({
+                title: '设备不存在或无数据',
+                icon: 'loading',
+                duration: 3000
+              })
+
+              return;
+            }
+            if (isSuccess == 'Y') {
+              if (s_obj.length !== 0 && s_obj.length != undefined) {
+                let searchList = [];
+                //UtilCommon.formatTime(new Date(arrs[0].gpsTime))
+                //如果isFromSearch是true从data中取出数据，否则先从原来的数据继续添加  
+                that.data.isFromSearch ? searchList = s_obj : searchList = that.data.forecast.concat(s_obj);
+                if (s_obj.length < that.data.callbackcount) {
+                  that.setData({
+                    val: '',
+                    forecast: searchList, //获取数据数组  
+                    searchLoadingComplete: true, //把“没有数据”设为true，显示  
+                    searchLoading: false
+                  });
+                } else {
+                  that.setData({
+                    val: '',
+                    forecast: searchList, //获取数据数组  
+                    searchLoading: true //把"上拉加载"的变量设为false，显示  
+                  });
+                }
+              } else {
+                wx.showToast({
+                  title: '查询无数据',
+                  icon: 'none',
+                  duration: 3000
+                })
+                return
+              }
+            }
+
+          },
+          fail: function(err) {
+            wx.showToast({
+              title: '网络异常请重试',
+              duration: 3000,
+              icon: "loading"
+            })
+          }
+        });
+
+      },
+      fail: function(error) {
+        console.log(error)
+
+      }
+    })
+  },
+
+  //滚动到底部触发事件  
+  searchScrollLower: function() {
+    let that = this;
+    if (that.data.searchLoading && !that.data.searchLoadingComplete) {
+      that.setData({
+        searchPageNum: that.data.searchPageNum + 1, //每次触发上拉事件，把searchPageNum+1  
+        isFromSearch: false //触发到上拉事件，把isFromSearch设为为false  
+      });
+      that.fetchSearchList("N");
+    }
+  },
+  bindOperTypeChange: function(e) {
+    this.setData({
+      proArrysIndex: e.detail.value
+    })
+  },
+  bindEndChange:function(e){
+    this.setData({
+      startDate: e.detail.value
+    })
+  },
+  bindTrackBegin:function(e){
+    this.setData(
+      {
+        dateTime :e.detail.value
+      }
+    )
+  },
+  bindTrackEnd:function(e){
+   this.setData({
+     dateTime1:e.detail.value
+   })
+  }, 
+  bindEnd2Change: function(e) {
+    this.setData({
+      endDate: e.detail.value
+    })
+  },
+  radioChange:function(e){
+      this.setData({
+        queryIndex:e.detail.value
+      })
+      //如果是设备号，则显示另一组控件
+  },
+   newFormatTime:function(dateTimeArray,dateTime) {
+
+    let year = dateTimeArray[0][dateTime[0]];
+    let month = dateTimeArray[1][dateTime[1]];
+    let day = dateTimeArray[2][dateTime[2]];
+    let hour = dateTimeArray[3][dateTime[3]];
+    let min = dateTimeArray[4][dateTime[4]];
+    let seconds = dateTimeArray[5][dateTime[5]];
+    let trackBegin = year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + seconds;
+    return trackBegin;
+  }
+})
+
+

@@ -1,0 +1,97 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="userNameInput" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入配载单号或扫码" value="{{val}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="jumpTo_sousuo"></text>
+      <text class="iconfont icon-saomiao" bindtap="jumpTo_saomiao"></text>
+    </view>
+  </view>
+</view>
+<view class="container_name">
+  <view class="classname">
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">配载单号：{{attemperNo}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">路由名称：{{warehouseName}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">司机：{{driver}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">车牌：{{vehicleNo}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">
+        <picker mode="date" value="{{departDate}}" bindchange="bindDepartDateChange">
+          <view class="picker2">
+          到车日期：{{departDate}}
+          </view>
+        </picker>
+      </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:10px 0px 10px 0px;">
+        <picker mode="time" value="{{departTime}}" bindchange="bindDepartTimeChange">
+          <view class="picker2">
+            到车时间：{{departTime}}
+          </view>
+        </picker>
+      </view>
+    </span>
+  </view>
+</view>
+<radio-group class="radio-group" bindchange="radioChange">
+
+  <label class="radio" wx:for-items="{{array}}" wx:key="{{index}}">
+    <radio value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+  </label>
+
+</radio-group>
+<!--此处的功能是进行异常处理隐藏显示-->
+<view class="{{showHiden?'show':'hide'}}">
+
+  <view style="margin-top:10px;">
+    <view class="section">
+      <view class="section__title">常见异常原因：</view>
+      <picker value="{{picker1Value}}" range="{{picker1Range}}" bindchange="normalPickerBindchange" style="margin-top:5px;">
+        <view class="picker1">{{picker1Range[picker1Value]}}</view>
+      </picker>
+    </view>
+  </view>
+  <view style="margin-top:10px;">
+    <view class="section__title">描述详细原因：</view>
+    <view class="picker1" style="margin-top:5px;">
+      <textarea style="height:50rpx;" placeholder="请描述详细原因" value="{{exception_remark}}" bindinput="inputRemark" maxlength="300" auto-focus />
+    </view>
+  </view>
+</view>
+
+<view class="section index-nav">
+  <block wx:for-items="{{navs}}" wx:key="{{navs}}">
+    <view class="btn-list" bindtap="jumpToMyPage" data-type="{{item.text}}">
+      
+      <span class="{{item.ys}}"></span>
+      <text>{{item.text}}</text>
+      <text style="display:none;">{{showView}}</text>
+      <!-- </button> -->
+
+    </view>
+  </block>
+</view>
+<view class="gallery">
+  <view class="item" wx:for="{{images}}" wx:key="">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx; border:#ddd 1px solid; padding:1px;" src=" {{item}}" data-src="{{item}}" bindtap="previewImage" mode="aspectFill" />
+    <!-- 删除按钮 -->
+    <view class="delete" bindtap="delete" data-index="{{index}}">
+      <!-- <image src="http://www.icosky.com/icon/thumbnails/Application/asp.net/delete%20Icon.jpg" /></view> -->
+      <span style="{{spanStyle}};left: {{imageWidth / 2 - 26}}px;">X</span>
+    </view>
+  </view>
+  <view class="item">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx" src="" class="button-upload" bindtap="chooseImage" />
+  </view>
+</view>
+<!-- <view >
+ <button bindtap="submit"   style="{{col}}">{{showView?'提  交':'提  交'}}</button>
+ </view>  -->

@@ -1,0 +1,167 @@
+const app = getApp();
+Page({
+  data: {
+    tab_select: 0,
+    tab_width: '',
+    tab_name: [],
+    content_alarm: [],
+    content_process: [],
+    pageNo: 1,
+    officeCode: "",
+    inputVal:""
+  },
+  onLoad: function () {
+    console.log("onload");
+
+    this.setData({
+      // officeCode: wx.getStorageSync("userinfo").officeCode
+    })
+
+  },
+  onShow: function () {
+    console.log("onshow");
+    //加载顶部菜单
+    let that = this;
+    that.getAlarmData(1, false, that);
+    // this.getMenuTab(that);//在getMenuTab内部调用getAlarm方法，保证tab和报警内容的同步
+  },
+  //获取报警数据
+  getAlarmData: (pageNo, isPut, that,deviceCode) => {
+    wx.showLoading({
+      title: "数据加载中",
+      mask: true
+    });
+   
+    wx.request({
+      // url: 'http://localhost:8080/service/wechat_GetAlarm',
+      url: app.getBaseUrl() + 'gps/service/BdsDeviceStatus_queryDeviceForApp',
+      method: "POST",
+      data: {
+        currentPage: pageNo,
+        pageSize: 10,
+        deviceCode: deviceCode//20190117001
+      },
+      success: res => {
+        if (res.data.isSuccess == "Y") {
+          wx.hideLoading();
+          //是否再原有的Array添加数据
+          if (isPut) {
+            if (res.data.length && res.data.length > 0) {
+              let temp_arr_alarm = that.data.content_alarm.concat(res.data.data.data.data.alarm);
+              let temp_arr_process = that.data.content_process;
+              temp_arr_process.push(res.data.data.data.data.process);
+              that.setData({
+                content_alarm: temp_arr_alarm,
+                content_process: temp_arr_process
+              })
+            } else {
+              wx.showToast({
+                title: '已经到底了',
+                icon: 'none',
+                duration: 3000
+              })
+              let lastPageNo = pageNo - 1
+              that.setData({
+                pageNo: lastPageNo
+              })
+              return
+            }
+          } else {
+            if (!res.data.data || res.data.data.length == 0) {
+              wx.showToast({
+                title: '无数据，将自动返回菜单!',
+                icon: 'none',
+                duration: 3000
+              });
+              var backTimeer = setTimeout(() => {
+                wx.navigateBack({
+                  delta: 1
+                })
+              }, 2000)
+            }
+            that.setData({
+                content_alarm: res.data.data
+            })
+
+          }
+
+
+
+        } else {
+          wx.showToast({
+            title: '无数据，将自动返回菜单!',
+            icon: 'none',
+            duration: 3000
+          });
+          var backTimeer = setTimeout(() => {
+            wx.navigateBack({
+              delta: 1
+            })
+          }, 2000)
+        }
+      },
+      fail: err => {
+        console.log(err)
+      }
+    })
+  },
+  //进入详细信息
+  moreDetail: function (e) {
+    let index = e.currentTarget.dataset.numb;
+    let data_alarm = JSON.stringify(this.data.content_alarm[index]);
+    console.log(data_alarm);
+    wx.navigateTo({
+      url: `./dealWarnDetail/dealWarnDetail?data_alarm=${data_alarm}&data_process=`,
+    })
+  },
+  //下拉刷新
+  onPullDownRefresh: function () {
+    console.log('refresh')
+    let that = this;
+    wx.stopPullDownRefresh();
+    wx.showNavigationBarLoading();
+    this.getAlarmData(this.data.tab_select, 1, false, that);
+    wx.hideNavigationBarLoading()
+  },
+  //下滑加载
+  onReachBottom: function () {
+    console.log("addfresh");
+    let that = this
+    let newPageNo = this.data.pageNo + 1;
+    console.log(newPageNo);
+    this.setData({
+      pageNo: newPageNo
+    })
+    wx.showNavigationBarLoading();
+    this.getAlarmData( newPageNo, true, that)
+    wx.hideNavigationBarLoading()
+  },
+  showInput: function () {
+    this.setData({
+      inputShowed: true
+    });
+  },
+  hideInput: function () {
+    this.setData({
+      inputVal: "",
+      inputShowed: false
+    });
+    // getList(this);
+  },
+  clearInput: function () {
+    this.setData({
+      inputVal: ""
+    });
+    // getList(this);
+   
+  },
+  inputTyping: function (e) {
+    //搜索数据
+    // getList(this, e.detail.value);
+   this.getAlarmData(0, false, this, e.detail.value);
+    this.setData({
+      inputVal: e.detail.value
+    });
+  }
+
+})

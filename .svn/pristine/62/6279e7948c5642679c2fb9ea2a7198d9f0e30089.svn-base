@@ -1,0 +1,39 @@
+<!-- connect.wxml -->
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="inputCodeHandler" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入配载单号或扫码" value="{{inputCode}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="searchHandler"></text>
+      <text class="iconfont icon-saomiao" bindtap="scanHandler"></text>
+    </view>
+  </view>
+</view>
+<view style="width:100%;height:40px;broder-bottom:1px solid #ddd;line-height:40px;padding-left:20rpx;font-size:14px;">
+  <view style="">配载单号：{{attemperNo}}</view>
+</view>
+<view class="list">
+  <view style="width:15%; float:left; text-align:center;">选择</view>
+  <view style="width:35%; float:left; text-align:center;">POD号</view>
+  <view style="width:25%; float:left; text-align:center;">是否拆分</view>
+  <view style="width:25%; float:left; text-align:center;">交接状态</view>
+  <view class="clearfix"></view>
+</view>
+<view class="list01">
+  <view class="forecast">
+    <checkbox-group bindchange="checkboxChange">
+      <block wx:for="{{attemperDetailArray}}" wx:key="{{index}}" wx:for-index="index" wx:for-item="attemperDetail">
+        <view class="castItem">
+          <checkbox value="{{attemperDetail.signNo}}" style="width:15%;" disabled="{{attemperDetail.podIsConnect===1 || attemperDetail.podIsConnect===2}}" checked="{{attemperDetail.omsOrderId === null}}" />
+          <view class="castDay" style="width:35%;">{{attemperDetail.signNo}}</view>
+          <view class="castType" style="width:25%;text-align:center">
+            {{attemperDetail.subOrderItemTypeName}}
+          </view>
+          <view class="castTmp" style="width:25%;text-align:center">
+            {{attemperDetail.podIsConnect===1 ? '已交接' : (attemperDetail.podIsConnect===2 ? '未随车' : '未交接')}}
+          </view>
+        </view>
+      </block>
+    </checkbox-group>
+    <button bindtap="submitPodIsConnect" disabled="{{!selectedSignNoArray || selectedSignNoArray.length <= 0}}" style="width: 37%;background-color:#E3F2FD; position: fixed;bottom: 20px; left:30%; border-radius: 30px; border:none;font-size:14px;">未随车</button>
+  </view>
+</view>

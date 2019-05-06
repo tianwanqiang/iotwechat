@@ -1,0 +1,98 @@
+// ****** auth.js 控制按钮的使用权限
+
+//使用方法
+//APPJS请求接口-获取权限-赋值到全局变量
+//utils=》auth.js获取全局变量-配置每个页面button权限
+//PAGE.js引入auth.js    var auth_conf = require('../../utils/auth.js');
+/* PAGE.js内button写入方法 
+
+	fail_use: auth_conf.fail_use,
+	
+		example：
+
+		if (auth_conf.daoche_camara == 1){
+			XXX原方法
+		}else{
+			this.fail_use()
+		}
+*/
+
+
+//没有权限时调用方法;
+const fail_use = () => {
+  wx.showToast({
+    title: '对不起，您没有该权限!',
+    icon: 'none',
+    duration: 3000
+  });
+};
+
+
+
+// //更新权限
+// const updataAuth = () => {
+//   console.log("更新!!")
+//   let authority = wx.getStorageSync('authority');
+//   console.log(authority);
+
+//   const daoche_search = authority['loadingCar'].loadingSearch;
+//   const daoche_upload = authority['loadingCar'].loadingUpload;
+//   const daoche_camara = authority['loadingCar'].loadingCamara;
+//   console.log(daoche_search);
+//   //发车
+//   const departSearch = authority['departCar'].departSearch;
+//   const departUpload = authority['departCar'].departUpload;
+//   const depart = authority['departCar'].depart;
+//   const departCheckout = authority['departCar'].departCheckout;
+//   //到车
+//   const arriveCarSearch = authority['arriveCar'].arriveCarSearch;
+//   const arriveCarUpload = authority['arriveCar'].arriveCarUpload;
+//   const arriveCarCamara = authority['arriveCar'].arriveCarCamara;
+//   //单证交接
+//   const giveUninCar = authority['giveUnin'].giveUninCar;
+//   const giveSearch = authority['giveUnin'].giveSearch;
+//   //货物异常
+//   const abnormalSearch = authority['abnormal'].abnormalSearch;
+//   const abnormalCamara = authority['abnormal'].abnormalCamara;
+//   const abnormalUpload = authority['abnormal'].abnormalUpload;
+//   //终端绑定
+//   const bindingSearch = authority['binding'].bindingSearch;
+//   const unbinding = authority['binding'].unbinding;
+//   const bindingUpload = authority['binding'].bindingUpload;
+//   const binding = authority['binding'].binding;
+//   //签收
+//   const signForSearch = authority['signFor'].signForSearch;
+//   const signForUpload = authority['signFor'].signForUpload;
+//   const signForCamara = authority['signFor'].signForCamara;
+//   exports = {
+//     authority: authority,
+//     fail_use: fail_use,
+
+//     daoche_upload: daoche_upload,
+//     daoche_search: daoche_search,
+//     daoche_camara: daoche_camara,
+//     departSearch: departSearch,
+//     departUpload: departUpload,
+//     depart: depart,
+//     departCheckout: departCheckout,
+//     arriveCarSearch: arriveCarSearch,
+//     arriveCarSearch: arriveCarSearch,
+//     arriveCarUpload: arriveCarUpload,
+//     arriveCarCamara: arriveCarCamara,
+//     giveUninCar: giveUninCar,
+//     giveSearch: giveSearch,
+//     abnormalSearch: abnormalSearch,
+//     abnormalCamara: abnormalCamara,
+//     abnormalUpload: abnormalUpload,
+//     bindingSearch: bindingSearch,
+//     unbinding: unbinding,
+//     bindingUpload: bindingUpload,
+//     binding: binding,
+//     signForSearch: signForSearch,
+//     signForUpload: signForUpload,
+//     signForCamara: signForCamara,
+//   }
+// }
+module.exports = {
+  fail_use: fail_use,
+}

@@ -1,0 +1,42 @@
+<view class="bg-b"></view>
+<view class="weui-cells weui-cells_after-title cell_font_size">
+            <view class="weui-cell">
+                <view class="weui-cell__bd">设备编号：</view>
+                 <view class="weui-cell__ft">{{deviceCode}}</view>
+            </view>
+              <view class="weui-cell">
+                <view class="weui-cell__bd">采集时间：</view>
+                 <view class="weui-cell__ft">{{gpsTime}}</view>
+            </view>
+              <view class="weui-cell">
+                <view class="weui-cell__bd">地点：</view>
+                 <view class="weui-cell__ft">{{location}}</view>
+            </view>
+              <view class="weui-cell">
+                <view class="weui-cell__bd">速度：</view>
+                 <view class="weui-cell__ft">{{speed}}</view>
+            </view>
+              <view class="weui-cell">
+                <view class="weui-cell__bd">方向：</view>
+                 <view class="weui-cell__ft">{{direction}}</view>
+            </view>
+              <view class="weui-cell">
+                <view class="weui-cell__bd">状态：</view>
+                 <view class="weui-cell__ft">{{status}}</view>
+            </view>
+        </view>
+<view class="deal_section">
+  <view class="deal_title"></view>
+  <view class="deal_tips">工作模式</view>
+  <picker class='alarm_picker common_height common_center' bindchange="bindPickerChange" value="{{m_index}}" range="{{resData_process}}">
+    <view class="picker">
+      {{resData_process[m_index]}}
+    </view>
+  </picker>
+  <view class="deal_tips">{{modeTitle1}}</view>
+  <input type='text' bindinput="checkRemark" class="content_input common_height common_center " value='{{upload_time1}}' focus="{{m_index== 0}}"></input>
+  <view class="deal_tips" wx:if="{{m_index!= 1}}">{{modeTitle2}}</view>
+   <input type='text' bindinput="checkRemark2" wx:if="{{m_index!= 1}}" class="content_input common_height common_center" value='{{upload_time2}}' focus="{{m_index== 0}}"></input>
+  <!-- <button style='margin:30px auto 0;width:60%' type='primary' bindtap='doEdit'>确定提交</button> -->
+   <a href="#" class="button button-3d button-primary button-rounded center common_center">提交</a>
+</view>

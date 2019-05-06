@@ -1,0 +1,215 @@
+// pages/tms/elecLockOperLog/elecLockOperLog.js
+var util = require('../../../utils/util.js')
+const app = getApp();
+var that;
+var arr_old;
+var array_vals;
+var searchPageNum;
+var callbackcount;
+Page({
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    operArraysIndex: 0,
+   alarmType: [{id:"",tname:"所有"},{ id: 0, tname: "离线报警" },{ id: 2, tname: "停车超时" },{ id: 3,tname: "偏航报警" }, { id: 4, tname: "长时间行驶报警" }, { id: 30, tname: "低电量报警" }, { id: 65, tname: "异常轨迹点报警" }, { id: 100, tname: "紧急报警" }, { id: 101, tname: "超速报警" }, { id: 102, tname: "疲劳驾驶" }, { id: 103, tname: "胎压告警" }, { id: 104, tname: "GNSS模块发生故障" }, { id: 105, tname: "GNSS天线未接或被剪断" }, { id: 106, tname: "GNSS天线短路" }, { id: 107, tname: "终端主电源欠压" }, { id: 108, tname: "终端主电源掉电" }, { id: 109, tname: "锁杆剪断报警" }, { id: 110, tname: "打开报警" }, { id: 111, tname: "应急开锁报警" }, { id: 112, tname: "拆除报警" }, { id: 113, tname: "高温报警" }, { id: 114, tname: "低温报警" }, { id: 115, tname: "湿度报警" }, { id: 116, tname: "震动告警" }, { id: 117, tname: "气压告警" }, { id: 118, tname: "当天累计驾驶超时" }, { id: 118, tname: "当天累计驾驶超时" }, { id: 119, tname: "超时停车" }, { id: 120, tname: "进出区域" }, { id: 121, tname: "进出路线" }, { id: 122, tname: "路段行驶时间不足/过长" }, { id: 123, tname: "路线偏离报警" }, { id: 124, tname: "低压报警" }, { id: 125, tname: "拆壳报警" }, { id: 127, tname: "车辆非法点火" }, { id: 128, tname: "车辆非法位移" }, { id: 129, tname: "碰撞侧翻报警" }, { id: 130, tname: "光感报警" }, { id: 131, tname: "电池高温报警" }, { id: 132, tname: "电池低温报警" }]
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function(options) {
+    var startDate = new Date();
+    var endDate = new Date();
+    startDate = util.formatDate(startDate);
+    endDate = util.formatDate(endDate);
+   
+    var ret = [];
+    for (var i = 0; i < 64; i++) {
+      var key = (i + 100) + "";
+      var val = this.data.alarmType[key];
+      if (val) {
+        ret.push([key, val]);
+      }
+    }
+    this.setData({
+      operTypeArrays: ret,
+      operArraysIndex: 0,
+      deviceCode: '',
+      startDate: startDate,
+      endDate: endDate,
+      forecast: [],
+      isFromSearch: true, // 用于判断数组是不是空数组，默认true，空的数组
+      searchPageNum: 1, // 设置加载的第几次，默认是第一次  
+      callbackcount: 15, //返回数据的个数  
+      searchLoading: false, //"上拉加载"的变量，默认false，隐藏  
+      searchLoadingComplete: false, //“没有数据”的变量，默认false，隐藏 
+
+    })
+  },
+  bindStartChange: function(e) {
+    this.setData({
+      startDate: e.detail.value
+    })
+  },
+
+  bindEndChange: function(e) {
+    this.setData({
+      endDate: e.detail.value
+    })
+  },
+  bindOperTypeChange: function(e) {
+    this.setData({
+      operArraysIndex: e.detail.value
+    })
+  },
+  //滚动到底部触发事件  
+  searchScrollLower: function() {
+    let that = this;
+    if (that.data.searchLoading && !that.data.searchLoadingComplete) {
+      that.setData({
+        searchPageNum: that.data.searchPageNum + 1, //每次触发上拉事件，把searchPageNum+1  
+        isFromSearch: false //触发到上拉事件，把isFromSearch设为为false  
+      });
+      that.fetchSearchList("N");
+    }
+  },
+  //搜索请求
+  scan_code: function() {
+    let that = this;
+    let deviceCode = that.data.deviceCode;
+    if (deviceCode == undefined) {
+      deviceCode = "";
+    }
+
+    that.setData({
+      searchPageNum: 1, //第一次加载，设置1  
+      forecast: [], //放置返回数据的数组,设为空  
+      isFromSearch: true, //第一次加载，设置true  
+      searchLoading: false, //把"上拉加载"的变量设为true，显示  
+      searchLoadingComplete: false //把“没有数据”设为false，隐藏  
+    })
+    that.fetchSearchList("N");
+  },
+  ////搜索
+  jumpToMyPage_sousuo: function() {
+
+    this.scan_code();
+  },
+  //查询列表
+  fetchSearchList: function(types) {
+    let that = this;
+    let deviceCode = that.data.deviceCode; //输入框字符串单号作为参数  
+    searchPageNum = that.data.searchPageNum; //把第几次加载次数作为参数  
+    callbackcount = that.data.callbackcount; //返回数据的个数
+    let officeCode = wx.getStorageSync("userinfo").officeCode;
+    let operArraysIndex = that.data.operArraysIndex;
+    let queryInfo ={};
+    var alarmType = that.data.alarmType[operArraysIndex]["id"];
+    let pagingInfo = {
+      "pageSize": 20,
+      "currentPage": 1};
+    let fieldCodeTypes = {};
+    let queryFields=[{
+      "fieldName": "CDT_alarmType",
+      "operator": "=",
+      "fieldStringValue": alarmType+"",
+      "fieldType": "String"
+    }];
+    let orderBy = "createTime desc";
+    queryInfo["orderBy"] = orderBy;
+    queryInfo["queryFields"] = queryFields;
+    queryInfo["fieldCodeTypes"] = fieldCodeTypes;
+    queryInfo["pagingInfo"] = pagingInfo;
+    queryInfo["queryType"] = "DeviceAlarmRecordQuery";
+    
+    wx.request({
+      url: app.getAlarmUrl() + 'AlarmRecord_DeviceAlaramQueryForApp',
+      method: "POST",
+      data: {
+        queryInfo: queryInfo
+      },
+      success: function(res) {
+        console.log(res)
+        if (res.data.data) {
+         
+          var isSuccess = res.data.isSuccess;
+          var s_obj = res.data.data;
+
+          if (isSuccess && isSuccess == 'N') {
+            that.setData({
+              deviceCode: '',
+              isFromSearch: true, //第一次加载，设置true  
+              searchLoading: false, //把"上拉加载"的变量设为true，显示  
+              searchLoadingComplete: false //把“没有数据”设为false，隐藏
+            });
+            wx.showToast({
+              title: '设备不存在或无数据',
+              icon: 'none',
+              duration: 3000
+            })
+
+            return;
+          }
+          if (isSuccess == 'Y') {
+            //如果返回了数据
+            if (s_obj.length !== 0 && s_obj.length != undefined) {
+              let searchList = [];
+              //UtilCommon.formatTime(new Date(arrs[0].gpsTime))
+              //如果isFromSearch是true从data中取出数据，否则先从原来的数据继续添加  
+              that.data.isFromSearch ? searchList = s_obj : searchList = that.data.forecast.concat(s_obj);
+              if (s_obj.length < that.data.callbackcount) {
+                that.setData({
+                  deviceCode: '',
+                  forecast: searchList, //获取数据数组  
+                  searchLoadingComplete: true, //把“没有数据”设为true，显示 
+                  searchLoading: false
+                });
+              } else {
+                that.setData({
+                  deviceCode: that.data.deviceCode, //设备号
+                  forecast: searchList, //获取数据数组  
+                  searchLoading: true //把"上拉加载"的变量设为false，显示  
+                });
+              }
+            } else {
+              that.setData({
+                deviceCode: that.data.deviceCode, //设备号
+                // forecast: searchList, //获取数据数组  
+                searchLoading: false, //把"上拉加载"的变量设为false，显示  
+                searchLoadingComplete: true
+              });
+              wx.showToast({
+                title: '查询无数据',
+                icon: 'none',
+                duration: 3000
+              })
+              return
+            }
+          }
+        }else{
+          wx.showToast({
+            title: '无结果',
+            duration: 1500,
+            icon: "none"
+          })
+        }
+      },
+      fail: function(err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "none"
+        })
+      }
+
+    });
+  },
+
+  userNameInput: function(e) {
+    this.setData({
+      deviceCode: e.detail.value
+    });
+  },
+  
+})

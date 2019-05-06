@@ -1,0 +1,89 @@
+<view class='containerl'>
+ <view class="swiper-tab">
+    <view class="swiper-tab-item"></view>
+    <view class="swiper-tab-item-left {{currentTab==1?'active':''}}" data-current="1" bindtap="clickTab">列表</view>
+   <view class="swiper-tab-item-right {{currentTab==2?'active':''}}" data-current="2" bindtap="clickTab">地图</view>
+   <view class="swiper-tab-item-soso" bindtap="jumpPage">
+   <image src='../../../Image/Search.png'></image>
+   </view>
+  </view>
+<view class="swiper-tab">
+    <view class="swiper-tab-item-group {{ctall==5?'active-group':''}}" data-status="5" bindtap="checkData">
+     <text class="toptxt">{{allcar}}</text>
+     <text class="botomtxt">全部</text>
+    </view>
+    <view class="swiper-tab-item-group {{ctall==1?'active-group':''}}" data-status="1" bindtap="checkData">
+      <text class="toptxt">{{olcar}}</text>
+     <text class="botomtxt">运动</text>
+     
+     </view>
+    <view class="swiper-tab-item-group {{ctall==0?'active-group':''}}" data-status="0" bindtap="checkData">
+     <text class="toptxt">{{offcar}}</text>
+     <text class="botomtxt">离线</text>
+    </view>
+    <view class="swiper-tab-item-group {{ctall==2?'active-group':''}}" data-status="2" bindtap="checkData">
+      <text class="toptxt">{{pcar}}</text>
+     <text class="botomtxt">停车</text>
+    </view>
+    <view class="swiper-tab-item-group {{ctall==4?'active-group':''}}" data-status="4" bindtap="checkData">
+     <text class="toptxt">{{alcar}}</text>
+     <text class="botomtxt">报警</text>
+    </view>
+  </view>
+   <!--kaishi -->
+  <view class="list01 {{currentTab==1?'show':'hidden'}}">
+    <scroll-view scroll-y="true" bindscrolltolower="searchScrollLower">
+      <view class="forecast">
+        <block wx:for="{{forecast}}" wx:for-index="index" wx:for-item="fc" wx:key="{{fc.deviceCode}}">
+          <view class="zuiwaiceng">
+            <!--最外侧-->
+            <view class="castItem-out" data-type="{{fc.deviceCode}}">
+              <!--第一个-->
+              <view class="castItem-2">
+                <view  style="text-align:center;font-size:15px;font-family:Microsoft YaHei;">
+                设备号：{{fc.deviceCode}}
+                </view>
+                <view  style="text-align:center;font-size:15px;font-family:Microsoft YaHei;">{{fc. speed}}Km/h</view>
+                <view  style="text-align:center;font-weight:blod;">{{fc.deviceName==null?"-":fc.deviceName}}</view>
+              </view>
+              <view class='castItem-2'>
+                <view  style="width:100%;font-size:15px;font-family:Microsoft YaHei;">方向：{{fc.direction==''?'-':fc.direction}}</view>
+              </view>
+              <view class='castItem-2'>
+                <view  style="width:100%;font-size:15px;font-family:Microsoft YaHei;">状态：{{fc.status==''?'-':fc.status}}</view>
+              </view>
+              <!--第二个-->
+
+              <!--第三个-->
+              <view class='castItem-2'>
+                <view style="width:82%;font-size:15px;font-family:Microsoft YaHei;font-color:red">{{fc.location}}</view>
+               
+              </view>
+            </view>
+            <view class='buttom_b'>
+              <view style='width:50%;height:35px;display:flex;flex-direction:row;justify-content:center;line-height:35px;' bindtap='buttonReal' data-type="{{fc.deviceCode}}">
+                <image src='../../../Image/tab/search.png' style='width:20px;height:20px;margin-top:10px;line-height:30px'></image>
+                <view class='btn_track'>实时查询</view>
+              </view>
+              <view style='width:50%;border-left:1px solid #ccc;display:flex;flex-direction:row;justify-content:center;line-height:35px;' bindtap='buttonTruck' data-type="{{fc.deviceCode}}">
+                <image src='../../../Image/tab/trail.png' style='width:20px;height:20px;margin-top:10px;'></image>
+                <view class='btn_track'>轨迹回放</view>
+              </view>
+            </view>
+          </view>
+
+        </block>
+      </view>
+      <view class="loading" hidden="{{!searchLoading}}">正在载入更多...</view>
+      <view class="loading complete" hidden="{{!searchLoadingComplete}}">已加载全部</view>
+    </scroll-view>
+  </view>
+
+  <view class="list01 {{currentTab==2?'show':'hidden'}}">
+    <map id="trackMap" longitude="{{longitude}}"  latitude="{{latitude}}" scale="{{scale}}"  markers="{{markers}}" class='mapCls'  bindtap="bindregionchange">
+    <cover-view class='controlsTab'> <cover-image bindtap='subScale' src="/Image/lit.png" class="controlImage">
+   </cover-image>
+  <cover-image bindtap='addScale' class="controlImage" src='/Image/big.png'></cover-image></cover-view>
+    </map>
+  </view>
+ </view>

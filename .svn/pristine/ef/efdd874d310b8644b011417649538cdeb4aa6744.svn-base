@@ -1,0 +1,34 @@
+<view class='bg'>
+<view class='row center'>
+<view class='flex-begin'>设置工作模式</view>
+<view class='flex-end'>
+ <picker value="{{m_index}}" range="{{resData_process}}"  class='formval'>
+    <view>
+      {{resData_process[m_index]}}
+    </view>
+  </picker>
+</view>
+</view>
+<view class='row center'>
+<view class='flex-begin'>运动上报间隔</view>
+<view class='flex-end'>
+ <input value='请输入'  class='formval'></input>
+</view>
+</view>
+<view class='row center'>
+<view class='flex-begin'>运动上报间隔</view>
+<view class='flex-end'>
+  <input value='请输入' class='formval'></input>
+</view>
+</view>
+<view class='row center'>
+</view>
+<view class='row center'>
+</view>
+<view>
+ <button class='button button-3d button-primary button-rounded common_center' bindtap='setDeivceParam'>设备参数设置</button>
+</view>
+
+
+
+</view>

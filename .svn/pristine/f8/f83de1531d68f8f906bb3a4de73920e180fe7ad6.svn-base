@@ -1,0 +1,51 @@
+{
+  "pages": [
+    "pages/tms/tms",
+    "pages/tms/deviceManage/deviceManage",
+    "pages/tms/trackQuery/trackQuery",
+    "pages/tms/trackQuery/zoomMap/zoomMap",
+    "pages/tms/trackQuery/trackMap/trackMap",
+    "pages/tms/deviceManage/dealWarnDetail/dealWarnDetail",
+    "pages/tms/elecLockOperLog/elecLockOperLog",
+    "pages/user/user",
+    "pages/user/userinfo/userinfo",
+    "pages/tms/trackQuery/searchItem/searchPage",
+    "pages/tms/trackQuery/searchMap/searchMap",
+    "pages/tms/deviceManage/deviceInfo/deviceInfo",
+    "pages/tms/deviceManage/deviceParam/deviceParam",
+    "pages/tms/trackQuery/webmap/webmap"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#405f80",
+    "navigationBarTitleText": "外运物联网监控",
+    "backgroundColorTop": "dddddd",
+    "backgroundColorBottom": "dddddd"
+  },
+  "tabBar": {
+    "borderStyle": "white",
+    "selectedColor": "#2d49a6",
+    "list": [
+      {
+        "pagePath": "pages/tms/tms",
+        "text": "运输",
+        "iconPath": "Image/tab/car_1.png",
+        "selectedIconPath": "Image/tab/car_2.png"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "个人",
+        "iconPath": "Image/tab/own_1.png",
+        "selectedIconPath": "Image/tab/own_2.png"
+      }
+    ]
+  },
+  "networkTimeout": {
+    "request": 60000,
+    "uploadFile": 90000,
+    "downloadFile": 90000
+  },
+  "navigateToMiniProgramAppIdList": [
+    "wxa3dc88161abce04f"
+  ],
+  "sitemapLocation": "sitemap.json"
+}

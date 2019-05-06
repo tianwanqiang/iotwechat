@@ -1,0 +1,41 @@
+
+Page({
+  /**
+   * 页面的初始数据
+   */
+  data: {
+     deviceId:'',
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+    if(options.deviceId){
+      this.setData({
+        deviceId:deviceId
+      })
+    }
+  },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+
+  },
+  setDeivceParam:function(){
+    let deviceId = this.data.deviceId;
+    wx.navigateTo({
+      url: '../deviceParam/deviceParam?deviceId=' + deviceId,
+    })
+  }
+ 
+})

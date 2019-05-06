@@ -1,0 +1,39 @@
+/* pages/tms/dealWarn/deviceParam/deviceParam.wxss */
+.common_center{
+  display: block;
+  margin:1em auto;
+  width: 98%;
+}
+.bg{
+  /* display: flex; */
+  font-size: 12px;
+  
+}
+.row{
+  display: flex;
+  border-bottom: 0.1em solid rgb(238, 236, 236);
+}
+
+.center{
+height:189rpx;
+line-height:189rpx;
+text-align:center;
+}
+
+.flex-begin{
+justify-content:flex-end;
+width:25%;
+margin-left:2em;
+}
+
+.flex-end{
+width:75%;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.formval{
+  width: 90%;
+ 
+}

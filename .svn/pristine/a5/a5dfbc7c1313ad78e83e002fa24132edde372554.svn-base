@@ -1,0 +1,24 @@
+<view class="container">
+  <!-- <map id="maps" longitude="{{longitude}}" latitude="{{latitude}}"  controls="{{controls}}" bindcontroltap="controltap" bindmarkertap="markertap"  show-location style='width:100%;height:{{deviceH}}px'> -->
+  <map id="trackMap" longitude="{{longitude}}" latitude="{{latitude}}" scale="{{scale}}"  markers="{{markers}}" bindregionchange="makertap" style='width:100%;height:{{deviceH}}px' polyline="{{polyline}}" 	>
+
+    <cover-view class="map_text">
+
+      <cover-view class="classname_1">
+
+        <cover-view class="classname_2">{{platNo}} </cover-view>
+        <cover-view class="classname_2">{{gpsTime}}</cover-view>
+        <cover-view class="classname_2">{{speed}}</cover-view>
+
+
+      </cover-view>
+      <cover-view class="classname_1">
+       <cover-view>{{location}}</cover-view>
+      </cover-view>
+    </cover-view>
+  </map>
+</view>
+<view class="bottom">
+ <view class="btn" bindtap='playTrack'>  <image src="{{playImg}}" mode="widthFix"  class="{{className}}" /></view>
+ <view class="btn"  bindtap='searchTab'> <image src="../../../../Image/Search.png" mode="widthFix" style='width:32px;height:32px' /></view>
+</view>

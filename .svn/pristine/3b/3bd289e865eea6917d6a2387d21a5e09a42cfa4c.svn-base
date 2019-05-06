@@ -1,0 +1,87 @@
+<view class='containerl'>
+
+<view style="">
+<view class='queryInput' >
+<label style='font-size:14px'>设备号：</label>
+<input type="text" bindinput="userNameInput" placeholder-class="place-holder" placeholder='输入设备号' value="{{deviceCode}}"/>
+</view>
+
+  <picker mode="date"  bindchange="bindStartChange" class='queryInput'>
+  <label style='font-size:14px'>开始日期：{{startDate}}</label>
+  </picker>
+   <picker mode="date"  bindchange="bindEndChange" class='queryInput'>
+  <label style='font-size:14px'>结束日期：{{endDate}}</label>
+  </picker>
+ <picker mode="selector"  bindchange="bindOperTypeChange" class='queryInput' value="{{operArraysIndex}}" range="{{operTypeArrays}}"
+ range-key="oname">
+  <label style='font-size:14px'>操作类型：{{operTypeArrays[operArraysIndex].oname}}</label>
+  </picker>
+ <view class="button button-3d button-primary button-rounded common_button"  bindtap='jumpToMyPage_sousuo'>查询
+   
+    </view>
+</view>
+
+  <!--kaishi -->
+<view class="list01">
+  <scroll-view scroll-y="true" bindscrolltolower="searchScrollLower" >
+  <view class="forecast" >
+    <block wx:for="{{forecast}}" wx:for-index="index" wx:for-item="fc"  wx:key="{{fc.deviceCode}}">
+     <view class="zuiwaiceng"> 
+    <!--最外侧-->
+    <view class="castItem-out"  data-type="{{fc.deviceCode}}" > 
+      <!--第一个-->
+     <view class="castItem"> 
+   
+         <view class="castType" >
+         设备号:
+        </view>
+         <view class="castValue2" >
+         {{fc.deviceCode}}
+        </view>
+          <view class="castType" >
+         密码:
+        </view>
+         <view class="castValue2" >
+         {{fc.password?fc.password:'无'}}
+        </view>
+      </view>   
+         <view class="castItem"> 
+         <view class="castType" >
+         操作结果:
+        </view>
+         <view class="castValue2" >
+        {{operTypeArrays[fc.operatorType].oname}}
+        </view>
+           <view class="castType" >
+         处理结果:
+        </view>
+         <view class="castValue2" >
+        {{fc.result}}
+        </view>
+      </view> 
+         <view class="castItem"> 
+         <view class="castType">
+         创建时间:
+        </view>
+         <view class="castValue1">
+          {{fc.createTime}}
+        </view>
+           <view class="castType">
+         更新时间:
+        </view>
+         <view class="castValue1" >
+        {{fc.updateTime}}
+        </view>
+      </view>    
+
+    </view> 
+ 
+     </view> 
+
+    </block>
+  </view>
+    <view class="loading" hidden="{{!searchLoading}}">正在载入更多...</view>  
+    <view class="loading complete" hidden="{{!searchLoadingComplete}}">已加载全部</view>  
+</scroll-view> 
+</view>
+</view>

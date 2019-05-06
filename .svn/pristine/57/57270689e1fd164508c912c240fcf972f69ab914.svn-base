@@ -1,0 +1,73 @@
+{
+	"description": "项目配置文件",
+	"packOptions": {
+		"ignore": []
+	},
+	"setting": {
+		"urlCheck": false,
+		"es6": true,
+		"postcss": true,
+		"minified": true,
+		"newFeature": true,
+		"autoAudits": false
+	},
+	"compileType": "miniprogram",
+	"libVersion": "2.6.4",
+	"appid": "wxc264cee94fac8081",
+	"projectname": "iot-wechat",
+	"debugOptions": {
+		"hidedInDevtools": []
+	},
+	"isGameTourist": false,
+	"condition": {
+		"search": {
+			"current": -1,
+			"list": []
+		},
+		"conversation": {
+			"current": -1,
+			"list": []
+		},
+		"plugin": {
+			"current": -1,
+			"list": []
+		},
+		"game": {
+			"currentL": -1,
+			"list": []
+		},
+		"miniprogram": {
+			"current": 3,
+			"list": [
+				{
+					"id": -1,
+					"name": "地图查询页面",
+					"pathName": "pages/tms/trackQuery/searchMap/searchMap",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "百度地图页",
+					"pathName": "pages/tms/trackQuery/map/map",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "实时位置",
+					"pathName": "pages/tms/trackQuery/trackQuery",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": 3,
+					"name": "depart",
+					"pathName": "pages/truck/truck",
+					"query": "",
+					"scene": null
+				}
+			]
+		}
+	}
+}

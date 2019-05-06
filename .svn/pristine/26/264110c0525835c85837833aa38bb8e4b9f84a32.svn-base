@@ -1,0 +1,123 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    <input type="text" bindinput="userNameInput" style=" min-width:70%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入单号或扫码" value="{{val}}" />
+    <view style="margin-top:8px; margin-right:10px; float:right;width:20%;">
+      <text class="iconfont icon-sousuo" style="margin-right:10px;" bindtap="jumpTo_sousuo"></text>
+      <text class="iconfont icon-saomiao" bindtap="jumpTo_saomiao"></text>
+    </view>
+  </view>
+</view>
+
+<view class="container_name">
+  <view class="classname" style="border-bottom:1px solid #ddd;">
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">签收单号:{{signNo}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">收货联系人:{{consignee}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;"> 地址:{{consigneeAdr}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">数量:{{actualTotalPieces}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">体积:{{actualTotalVolume}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">重量:{{actualTotalWeight}} </view>
+    </span>
+  </view>
+</view>
+<view class="container_name">
+  <view class="classname">
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;"> 是否派送地点限制:{{deliverAddressLimit}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">派送地点类型:{{deliverAddressTypeCode}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">是否送货时间要求:{{deliverTimeRequest}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">是否自备卸货工具:{{isHaveDischagreTools}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">要求到货时间:{{crd}} </view>
+    </span>
+    <span style="font-size:14px;font-family:Microsoft YaHei;">
+      <view style="margin:4px 0px 4px 0px;">客户备注:{{customerRemarks}} </view>
+    </span>
+  </view>
+</view>
+<radio-group class="radio-group" bindchange="radioChange">
+
+  <label class="radio" wx:for-items="{{array}}" wx:key="{{index}}">
+    <radio value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+  </label>
+
+</radio-group>
+<!--此处的功能是进行异常处理隐藏显示-->
+<view class="{{showHiden?'show':'hide'}}">
+
+  <view style="margin-top:10px;">
+    <view class="section">
+      <view class="section__title">常见异常原因选择：</view>
+      <picker value="{{picker1Value}}" range="{{picker1Range}}" bindchange="normalPickerBindchange" style="margin-top:5px;">
+        <view class="picker">{{picker1Range[picker1Value]}}</view>
+      </picker>
+    </view>
+  </view>
+  <view style="margin-top:10px;">
+    <view class="section__title">描述详细原因：</view>
+    <view class="picker" style="margin-top:5px;">
+      <textarea style="height:35px;" placeholder="请描述详细原因" value="{{exception_remark}}" bindinput="inputRemark" maxlength="300" auto-focus />
+    </view>
+  </view>
+</view>
+ <!-- canvaspic--> 
+<canvas canvas-id="photo_canvas" style="width:{{ctx_width}}px;height:{{ctx_height}}px;position: absolute;left:-9000rpx;top:-9000rpx;"></canvas>
+<view class="section index-nav">
+  <block wx:for-items="{{navs}}"  wx:key="{{index}}">
+    <view class="btn-list" bindtap="jumpToMyPage" data-type="{{item.text}}">
+      <!-- <image src="{{item.image}}" class="slide-image"/>
+                <text>{{item.text}}</text> -->
+
+      <!-- <button style="{{item.style}}" id="{{key}}"   > -->
+      <span class="{{item.ys}}"></span>
+      <text>{{item.text}}</text>
+      <text style="display:none;">{{showView}}</text>
+      <!-- </button> -->
+
+    </view>
+  </block>
+</view>
+<view class="gallery">
+  <view class="item" wx:for="{{images}}" wx:key="">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx; border:#ddd 1px solid; padding:1px;" src=" {{item}}" data-src="{{item}}" bindtap="previewImage" mode="aspectFill" />
+    <!-- 删除按钮 -->
+    <view class="delete" bindtap="delete" data-index="{{index}}">
+      <!-- <image src="http://www.icosky.com/icon/thumbnails/Application/asp.net/delete%20Icon.jpg" /></view> -->
+      <span style="{{spanStyle}};left: {{imageWidth / 2 - 26}}px;">X</span>
+    </view>
+  </view>
+  <view class="item">
+    <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx" src="" class="button-upload" bindtap="chooseImage" />
+  </view>
+</view>
+<!-- <view >
+ <button bindtap="submit"   style="{{col}}">{{showView?'提  交':'提  交'}}</button>
+ </view>  -->
+<view class="classname">
+  <span style="font-size:14px;font-family:Microsoft YaHei;color:red">已上传图片</span>
+  <view class="gallery">
+    <view class="item" wx:for="{{images_1}}" wx:key="*this">
+      <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx; border:#ddd 1px solid; padding:1px;" src=" {{item}}" data-src="{{item}}" bindtap="previewImage_1" mode="aspectFill" />
+    </view>
+    <view class="item">
+      <image style="width: {{imageWidth}}rpx; height: {{imageWidth}}rpx" src="" class="button-upload" bindtap="chooseImage" />
+    </view>
+  </view>
+</view>

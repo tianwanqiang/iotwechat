@@ -1,0 +1,43 @@
+<view class="containerl">
+  <view style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;overflow:hidden;">
+    <input type="text" bindinput="oddNumberBindinput" style=" min-width:60%;white-space:nowrap;float:left;border:none; padding:10px;font-size:16px; color:#666;" placeholder="输入电子锁设备号" value="{{val}}" />
+    <view style="margin-top:8px; float:right;">
+      <text class="iconfont icon-sousuo" style="padding:10px 0.9rem;color:#FF0033;font-weight:bold;border-right:1px dashed #666666" bindtap="searchButton"></text>
+      <text class="iconfont icon-saomiao" style='padding:10px 0.9rem;color:#FF0033;font-weight:bold;' bindtap="scanCodeButton"></text>
+    </view>
+  </view>
+</view>
+<view class="container_name">
+  <view class="classname">
+    <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:10px 10px 20px">设备号：{{deviceCode}} </view>
+    </span>
+     <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:10px 10px 20px">腾讯产品id：{{tencentProductId}} </view>
+    </span>
+    <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:20px 10px;">激活状态：<text style='color:red;font-size:40rpx' class="hide{{activation==0?'show':''}}">未激活</text> <text class="hide{{activation!='' && activation!=0?'show':''}}">已激活</text></view>
+    </span>
+    <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:10px 10px 20px">车牌：{{deviceName}}</view>
+    </span>
+    <!-- <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:10px 10px 20px">位置：{{place}} </view>
+    </span> -->
+    <span style="font-size:34rpx;font-family:Microsoft YaHei;">
+      <view style="margin:10px 10px 20px">创建时间：{{createTime}} </view>
+    </span>
+  </view>
+</view>
+<!-- <view class='locks' bindtap='changeLock' bindtouchstart='startLock' touchend='endLock'>
+  <image class="lockhead {{changeLock?'changehead':''}}" 
+  src='https://lg-a3mn5gju-1257119824.cos.ap-shanghai.myqcloud.com/lockhead.png'></image>
+  <image class="lockfoot "
+  src='https://lg-a3mn5gju-1257119824.cos.ap-shanghai.myqcloud.com/lockfoot.png'></image>
+  <view class="outter1 {{touchLock?'outanim':''}}"></view>
+  <view class="outter1 outter2 {{touchLock?'outanim':''}}"></view>
+  <view class="outter1 outter3 {{touchLock?'outanim':''}}"></view>
+  <view class="outter1 outter4 {{touchLock?'outanim':''}}"></view>
+</view> -->
+<!-- <view style='margin-top:50px;font-size:30px;text-align:center'>当前状态：{{lockState}}</view> -->
+<!--此处的功能是进行异常处理隐藏显示-->

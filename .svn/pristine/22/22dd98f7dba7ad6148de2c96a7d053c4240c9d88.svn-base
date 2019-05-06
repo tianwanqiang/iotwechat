@@ -1,0 +1,786 @@
+var auth_conf = require('../../utils/auth.js');
+var app = getApp();
+Page({
+  data: {
+    no: '',
+    unbindingDisabled: true,
+    departText: '发车',
+    uploadText: '上传',
+    showHiden: false,
+    showView: true,
+		driver: '',
+		driverTel:'',
+		driverIdcard: '',
+		vehicleNo: '',
+		drivername:'',
+		driverphone:'',
+		driverid:'',
+		drivercarnum:''
+  },
+  click: function(e) {
+    var id = e.currentTarget.dataset.id
+    var that = this
+    that.setData({
+      id: id
+    })
+  },
+  onLoad: function(options) {
+    var that = this
+    wx.getSystemInfo({
+      success: function(res) {
+        that.setData({
+          scrollHeight1: res.windowHeight / 2
+        })
+
+      }
+    })
+
+    that.setData({
+      value: 'show'
+    })
+
+  },
+  fail_use: auth_conf.fail_use,
+  radioChange: function(e) {
+
+    var that = this
+    that.setData({
+      value: e.detail.value
+    })
+    console.log(this.data.value)
+  },
+
+  toggleDialog() {
+
+    this.setData({
+      showDialog: !this.data.showDialog
+    });
+  },
+  freeBack: function() {
+
+    var that = this
+    that.setData({
+      val: that.data.value
+    })
+    that.data.order_code = that.data.value;
+    that.jumpTo_sousuo(that.data.order_code);
+    that.setData({
+      showDialog: !this.data.showDialog
+    })
+  },
+  freetoBack: function() {
+    var that = this
+
+    that.setData({
+      showDialog: !this.data.showDialog,
+      value: 'show',
+      checked: false,
+    })
+  },
+	inputSet:function(e){
+		console.log(e.currentTarget.dataset.params);
+		console.log(e.detail.value);
+		let params = e.currentTarget.dataset.params;
+		switch(params){
+			case 'name':
+				this.setData({
+					drivername:e.detail.value
+				})
+			 break;
+			case 'phonenumber':
+				this.setData({
+					driverphone: e.detail.value
+				})
+			 break;
+			case 'idnumber':
+				this.setData({
+					driverid: e.detail.value
+				})
+				break;
+			case 'carnumber':
+				this.setData({
+					drivercarnum: e.detail.value
+				})
+				break;
+			default:
+				break;
+		}
+	},
+  //输入框
+  noBindinput: function(e) {
+    this.data.no = e.detail.value
+  },
+  //点击搜索
+  jumpTo_sousuo: function(data) {
+    var that = this;
+		//if (wx.getStorageSync('authority').departCar.departSearch == 1) {
+      var str_code = "";
+      if (data.type != 'tap') {
+        str_code = data;
+      } else {
+        str_code = this.data.no;
+      }
+      var omsAttemperId = "";
+      if (this.data.omsAttemperId != undefined) {
+        omsAttemperId = this.data.omsAttemperId;
+      }
+      var tNo = "";
+      var status = "";
+      var atd = "";
+      if (str_code == undefined) {
+        wx.showModal({
+          title: '',
+          content: '请输入配载单号或者车牌号',
+
+        });
+        return;
+      } else {
+        wx.request({
+          url: app.getBaseUrl() + 'service/wechat_queryAttemper',
+          method: "POST",
+          data: {
+            code: str_code,
+            omsAttemperId: omsAttemperId,
+            openId: wx.getStorageSync("openid")
+          },
+          success: function(e) {
+            if (e.data.data.isSuccess == 'N') { //请求失败
+              that.setData({
+                no: ""
+              });
+              wx.showModal({
+                title: '',
+                content: e.data.data.data,
+                showCancel: false
+              });
+            } else { //请求成功
+              if (e.data.data.data.length > 1) {
+
+                that.setData({
+                    picker1Range: e.data.data.data,
+                    picker1Value: 0
+                  }),
+                  that.toggleDialog()
+
+              } else {
+
+                if (e.data.data.data[0] == undefined) {
+                  if (e.data.data.data.terminalNo == undefined) {
+                    tNo = "";
+                  } else {
+                    tNo = e.data.data.data.terminalNo;
+                  }
+                  that.setData({
+                    terminalNo: tNo,
+                    no: "",
+                    unbindingDisabled: false,
+                    showHiden: false
+                  });
+                } else {
+                  var uploadText = "上传";
+                  if (e.data.data.data[0].terminalNo == undefined) {
+                    tNo = "";
+                  } else {
+                    tNo = e.data.data.data[0].terminalNo;
+
+                  }
+                  if (e.data.data.data[0].uploadStatus == undefined || e.data.data.data[0].uploadStatus == "0") {
+                    status = "未上传";
+                    uploadText = "上传";
+                  } else if (e.data.data.data[0].uploadStatus == "1") {
+                    status = "上传成功";
+                    uploadText = "取消上传";
+                  } else if (e.data.data.data[0].uploadStatus == "2") {
+                    status = "上传失败";
+                  } else if (e.data.data.data[0].uploadStatus == "3") {
+                    status = "完结";
+                  }
+                  if (e.data.data.data[0].atd != undefined) {
+                    atd = e.data.data.data[0].atd;
+                  }
+                  var unbindingDisabled = (tNo != '' && (status == '未上传' || status == '上传失败')) ? false : true;
+                  // 先判断发车状态，如果是未发车，显示“发车”，如果是已发车，再判断上传状态，如果是“未上传”或者“上传失败”，显示“上传”，如果是“上传成功”， 显示“取消上传”
+                  var departText = "";
+                  if (e.data.data.data[0].scheduleStatusName == '未发车') {
+                    departText = "发车";
+                  } else if (e.data.data.data[0].scheduleStatusName == '已发车') {
+                    departText = "取消发车";
+                  }
+									console.log(e.data.data.data[0])
+                  that.setData({
+                    departText: departText,
+                    uploadText: uploadText,
+                    unbindingDisabled: unbindingDisabled,
+                    attemperNo: e.data.data.data[0].attemperNo,
+                    driver: e.data.data.data[0].driver,
+										vehicleNo: e.data.data.data[0].vehicleNo,
+                    terminalNo: tNo,
+                    scheduleStatusName: e.data.data.data[0].scheduleStatusName,
+                    uploadStatus: status,
+                    omsAttemperId: e.data.data.data[0].omsAttemperId,
+                    atd: atd,
+                    driverTel: e.data.data.data[0].driverTel,
+										driverIdcard: e.data.data.data[0].driverIdcard,
+										stowageType: e.data.data.data[0].stowageType,
+                    no: "",
+                    showHiden: false
+                  });
+
+                }
+              }
+            }
+          }
+        });
+
+      }
+   // }else{
+	//		this.fail_use()
+		//}
+  },
+  //扫码
+  jumpTo_saomiao: function() {
+    var that = this;
+    wx.scanCode({
+      success: function(result) {
+        var no = result.result;
+        that.jumpTo_sousuo(no);
+      },
+    })
+  },
+  onbindtap: function(e) {
+    var tapType = e.currentTarget.dataset.type;
+    switch (tapType) {
+      case '发车':
+				if (wx.getStorageSync('authority').departCar.depart == 1) {
+					this.fache(this);
+					break;
+				} else {
+					this.fail_use();
+					break;
+				}
+      case '取消发车':
+        let that = this;
+        wx.showModal({
+          title: '确认取消发车吗',
+          content: '',
+          success: function (res) {
+            if (res.confirm) {
+              that.unDepart(that)
+            } else {
+              return
+            }
+          }
+        })
+        ;
+        break;
+      case '上传':
+				if (wx.getStorageSync('authority').departCar.departUpload == 1) {
+					this.uploadValidate(this);
+					break;
+				} else {
+					this.fail_use();
+					break;
+				}
+      case '取消上传':
+        this.cancelUpload(this);
+        break;
+      default:
+    }
+  },
+
+  //校验终端
+  validateTemNo: function() {
+		//if (wx.getStorageSync('authority').departCar.departCheckout == 1) {
+			var that = this;
+			var omsAttemperId = "";
+			var terminalNo = "";
+			var status = "";
+			var electricity = 0;
+			var stowageType = this.data.stowageType;
+			if (this.data.omsAttemperId != undefined) {
+				omsAttemperId = this.data.omsAttemperId;
+			} else {
+				wx.showModal({
+					title: '',
+					content: '请查询配载单',
+					showCancel: false
+				});
+				return;
+			}
+			
+			// if (that.data.drivername != '' && that.data.drivername != that.data.driver && that.data.driver){
+			// 	wx.showModal({
+			// 		title: '',
+			// 		content: '姓名验证错误',
+			// 		showCancel: false
+			// 	});
+			// 	return;
+			// }
+			// if (that.data.driverphone != '' && that.data.driverphone != that.data.driverTel && that.data.driverTel) {
+			// 	wx.showModal({
+			// 		title: '',
+			// 		content: '电话号码验证错误',
+			// 		showCancel: false
+			// 	});
+			// 	return;
+			// }
+			// if (that.data.driverid != '' && that.data.driverid != that.data.driverIdcard && that.data.driverIdcard) {
+			// 	wx.showModal({
+			// 		title: '',
+			// 		content: '身份证号验证错误',
+			// 		showCancel: false
+			// 	});
+			// 	return;
+			// }
+			// console.log(that.data.vehicleNo.slice(-6).toLowerCase());
+			// if (that.data.drivercarnum != '' && that.data.drivercarnum.slice(-6).toLowerCase() != that.data.vehicleNo.slice(-6).toLowerCase()) {
+			// 	wx.showModal({
+			// 		title: '',
+			// 		content: '车牌号码验证错误',
+			// 		showCancel: false
+			// 	});
+			// 	return;
+			// }
+			// if ((!that.data.drive || that.data.driver == '') && that.data.drivername != '') {
+			// 	that.setData({ driver: that.data.drivername})
+			// };
+			// if ((!that.data.driverTel || that.data.driverTel == '') && that.data.driverphone != '') {
+			// 	that.setData({ driverTel: that.data.driverphone })
+			// };
+			// if ((!that.data.driverIdcard || that.data.driverIdcard == '') && that.data.driverid != '') {
+			// 	that.setData({ driverIdcard: that.data.driverid })
+			// };
+			// if ((!that.data.vehicleNo || that.data.vehicleNo == '') && that.data.drivercarnum != '') {
+			// 	that.setData({ vehicleNo: that.data.drivercarnum })
+			// };
+
+			if (this.data.terminalNo != "") {
+				terminalNo = this.data.terminalNo;
+			} else {
+
+				wx.showModal({
+					title: '',
+					content: '请绑定终端',
+					showCancel: false
+				});
+				return;
+			}
+
+			wx.request({
+				url: app.getBaseUrl() + 'service/wechat_validateTemNo',
+				method: "POST",
+				data: {
+					terminalNo: terminalNo,
+					openId: wx.getStorageSync("openid"),
+					omsAttemperId: omsAttemperId
+				},
+				success: function (e) {
+					console.log(e.data.data.data.data)
+					if (e.data.data.data.isSuccess == 'N') {
+						that.setData({
+							no: ""
+						});
+						wx.showModal({
+							title: '',
+							content: e.data.data.data.data,
+							showCancel: false
+						});
+					} else {
+            if (e.data.data.data.data.isOnline == undefined || e.data.data.data.data.isOnline == "0") {
+							status = "离线";
+						} else if (e.data.data.data.data.isOnline == "1") {
+							status = "在线";
+						}
+						if (e.data.data.data.data.electricity != undefined) {
+							electricity = e.data.data.data.data.electricity;
+						}
+
+
+						that.setData({
+							isOnline: status,
+							distane: e.data.data.data.data.distane,
+							place: e.data.data.data.data.place,
+							lastSynchDate: e.data.data.data.data.lastSynchDate,
+							electricity: electricity,
+							showHiden: true
+						});
+					}
+				}
+			});
+		//} else {
+		//	this.fail_use()
+	//	}
+    
+
+
+  },
+  //发车
+  fache: function(that) {
+    var that = this;
+    var atd = "";
+    var status = "";
+    var omsAttemperId = "";
+    if (this.data.omsAttemperId != undefined) {
+      omsAttemperId = this.data.omsAttemperId;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请查询配载单',
+        showCancel: false
+      });
+      return;
+    }
+    if (this.data.driver == undefined || this.data.driverTel == undefined) { // by czq
+      wx.showModal({
+        title: '',
+        content: '司机信息不能为空',
+        showCancel: false
+      });
+      return;
+    }
+
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_depart',
+      method: "POST",
+      data: {
+        omsAttemperId: omsAttemperId,
+        openId: wx.getStorageSync("openid")
+      },
+      success: function(e) {
+        if (e.data.data.isSuccess == 'N') {
+          that.setData({
+            no: ""
+          });
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+
+        } else {
+          if (e.data.data.data.uploadStatus == null || e.data.data.data.uploadStatus == "0") {
+            status = "未上传";
+          } else if (e.data.data.data.uploadStatus == "1") {
+            status = "上传成功";
+          } else if (e.data.data.data.uploadStatus == "2") {
+            status = "上传失败";
+          } else if (e.data.data.data.uploadStatus == "3") {
+            status = "完结";
+          }
+          if (e.data.data.data.atd != undefined) {
+            atd = e.data.data.data.atd;
+          }
+          that.setData({
+
+            scheduleStatusName: e.data.data.data.scheduleStatusName,
+            uploadStatus: status,
+            atd: atd,
+            departText: "取消发车"
+          });
+        }
+      }
+    });
+  },
+  //取消发车
+  unDepart: function(that) {
+    var omsAttemperId = "";
+    var terminalNo = "";
+    var status = "";
+    if (this.data.omsAttemperId != undefined) {
+      omsAttemperId = this.data.omsAttemperId;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请查询配载单',
+        showCancel: false
+      });
+      return;
+    }
+
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_unDepart',
+      method: "POST",
+      data: {
+        omsAttemperId: omsAttemperId,
+        openId: wx.getStorageSync("openid")
+      },
+      success: function(e) {
+        if (e.data.data.isSuccess == 'N') {
+          that.setData({
+            no: ""
+          });
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+
+        } else {
+          that.setData({
+            atd: '',
+            scheduleStatusName: e.data.data.data.data.scheduleStatusName,
+            departText: "发车"
+          });
+
+
+
+        }
+      }
+    });
+
+  },
+
+  //上传
+  upload: function(omsAttemperId, that) {
+    wx.showLoading({
+      title: '处理中',
+      mask:true
+    })
+    var terminalNo = "";
+    var status = "";
+    var uploadText = "上传";
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_uploadBsp',
+      method: "POST",
+      data: {
+        omsAttemperId: omsAttemperId,
+        openId: wx.getStorageSync("openid"),
+        isCancel: 0
+      },
+      success: function(e) {
+        wx.hideLoading();
+        if (e.data.data.isSuccess == 'N') {
+          that.setData({
+            no: ""
+          });
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+
+        } else {
+          if (e.data.data.data == "上传成功") {
+            status = "上传成功";
+            uploadText = "取消上传";
+          } else if (e.data.data.data == "取消成功") {
+            status = "未上传";
+            uploadText = "上传";
+          }
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+          that.setData({
+            uploadStatus: status,
+            uploadText: uploadText
+          });
+        }
+      }
+    });
+
+  },
+
+  //解绑
+  unbind: function(e) {
+    var that = this;
+    var omsAttemperId = "";
+    if (this.data.omsAttemperId != undefined) {
+      omsAttemperId = this.data.omsAttemperId;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请查询配载单',
+        showCancel: false
+      });
+      return;
+    }
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_terminalNoUnBind',
+      method: "POST",
+      data: {
+        omsAttemperId: omsAttemperId,
+        openId: wx.getStorageSync("openid")
+      },
+      success: function(e) {
+        if (e.data.isSuccess == 'N') {
+          that.setData({
+            no: ""
+          });
+          wx.showModal({
+            title: '',
+            content: e.data.data,
+            showCancel: false,
+            unbindingDisabled: false
+          });
+        } else {
+          that.setData({
+            terminalNo: "",
+            unbindingDisabled: true
+          });
+          wx.showModal({
+            title: "",
+            content: '解绑成功',
+            showCancel: false
+          });
+
+        }
+      }
+    });
+
+  },
+
+  //取消上传
+  cancelUpload: function(that) {
+    var omsAttemperId = "";
+    var terminalNo = "";
+    var status = "";
+    var uploadText = "上传";
+    if (this.data.omsAttemperId != undefined) {
+      omsAttemperId = this.data.omsAttemperId;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请查询配载单',
+        showCancel: false
+      });
+      return;
+    }
+
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_uploadBsp',
+      method: "POST",
+      data: {
+        omsAttemperId: omsAttemperId,
+        openId: wx.getStorageSync("openid"),
+        isCancel: 1
+      },
+      success: function(e) {
+
+        if (e.data.data.isSuccess == 'N') {
+          that.setData({
+            no: ""
+          });
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+
+        } else {
+
+          if (e.data.data.data == "上传成功") {
+            status = "上传成功";
+            uploadText = "取消上传";
+          } else if (e.data.data.data == "取消成功") {
+            status = "未上传";
+            uploadText = "上传";
+          }
+          wx.showModal({
+            title: '',
+            content: e.data.data.data,
+            showCancel: false
+          });
+
+          that.setData({
+            uploadStatus: status,
+            uploadText: uploadText
+          });
+
+
+
+        }
+      }
+    });
+
+  },
+
+  //上传校验
+  uploadValidate: function(that) {
+    var omsAttemperId = "";
+    var terminalNo = "";
+    var status = "";
+    if (this.data.omsAttemperId != undefined) {
+      omsAttemperId = this.data.omsAttemperId;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请查询配载单',
+        showCancel: false
+      });
+      return;
+    }
+    if (this.data.terminalNo != "") {
+      terminalNo = this.data.terminalNo;
+    } else {
+      wx.showModal({
+        title: '',
+        content: '请绑定终端!',
+        showCancel: false
+      });
+      return;
+    }
+    if (!this.data.showHiden) {
+      wx.showModal({
+        title: '',
+        content: '请先校验终端！',
+        showCancel: false
+      })
+    } else {
+      ///
+      wx.request({
+        url: app.getBaseUrl() + 'service/wechat_validateTemNo',
+        method: "POST",
+        data: {
+          terminalNo: terminalNo,
+          openId: wx.getStorageSync("openid"),
+          omsAttemperId: omsAttemperId
+        },
+        success: function(e) {
+
+          if (e.data.data.isSuccess == 'N') {
+            that.setData({
+              no: ""
+            });
+            wx.showModal({
+              title: '',
+              content: e.data.data.data,
+              showCancel: false
+            });
+
+          } else {
+
+            if (e.data.data.data.data.distane > 2) {
+              wx.showModal({
+                title: '',
+                content: '终端位置距离发货点超出2公里，是否确认上传？',
+                success: function(res) {
+                  if (res.confirm) {
+
+                    that.upload(omsAttemperId, that);
+
+                  }
+                }
+              });
+
+            } else {
+
+              that.upload(omsAttemperId, that);
+
+            }
+
+
+          }
+        }
+      });
+
+    }
+
+
+
+
+  },
+
+
+})

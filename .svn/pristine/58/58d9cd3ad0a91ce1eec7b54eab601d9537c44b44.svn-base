@@ -1,0 +1,481 @@
+const app = getApp();
+
+var that;
+Page({
+  data: {
+    changeLock: false,
+    lockState: '关锁',
+    touchLock: false,
+    deviceCode: '',
+    elockStatus: '', //页面展示电子锁状态
+    online: '',
+    eleStatus: '',
+    plateNo: '',
+    place: '',
+    createTime:'',
+    electricity:'',
+    timer: '',
+    count: 0, //这个变量用来进行计数定时器刷新次数
+    clickAuth: ''
+  },
+
+  //根据设备号查询
+  searchDrvice: function(deviceCode) {
+    // var that = this;
+    wx.request({
+      url: app.getBaseUrl() + 'BasDeviceManager_queryDeviceByCode',
+      method: "POST",
+      data: {
+        deviceCode: deviceCode
+      },
+      success: function(res) {
+        var isSuccess = res.data.isSuccess;
+        var s_obj = res.data.data;
+        console.log(s_obj);
+        if (isSuccess == 'N') {
+          wx.showToast({
+            title: '设备不存在',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        if (isSuccess == 'Y') {
+          if (s_obj == undefined) {
+            wx.showToast({
+              title: '设备不存在',
+              icon: 'loading',
+              duration: 3000
+            })
+            return;
+          }
+       //1表示关锁  0 表示开锁
+            that.setData({
+              touchLock: false,
+              changeLock: false,
+              deviceCode: s_obj.device_code,
+              tencentProductId: s_obj.tencentProductId,
+              createTime: s_obj.createTime,
+              activation: s_obj.activation,
+              online: s_obj.online
+            });
+          } 
+          return;
+      },
+      fail: function(err) {
+        wx.showToast({
+          title: '网络异常请重试',
+          duration: 3000,
+          icon: "loading"
+        })
+        return;
+      }
+    });
+  },
+  //输入框
+  oddNumberBindinput: function(e) {
+    // var that = this;
+    that.data.deviceCode = e.detail.value
+  },
+  //搜索
+  searchButton: function() {
+    // var that = this;
+    var deviceCode = that.data.deviceCode;
+    if (deviceCode == undefined || deviceCode == '') {
+      wx.showModal({
+        title: '请输入设备号',
+        content: '',
+        showCancel: false
+      });
+      return;
+    }
+    that.searchDrvice(deviceCode);
+  },
+  //扫码
+  scanCodeButton: function() {
+    // var that = this;
+    wx.scanCode({
+      success: function(result) {
+        var deviceCode = result.result;
+        if (deviceCode == undefined || deviceCode == '') {
+          wx.showToast({
+            title: '请扫描设备号',
+            icon: 'loading',
+            duration: 3000
+          })
+          return;
+        }
+        that.data.deviceCode = deviceCode;
+        that.searchDrvice(deviceCode); //设备查询
+      },
+      fail: function(error) {
+        wx.showToast({
+          title: '请重新操作',
+          duration: 3000,
+          ioc: 'loading'
+        })
+        return;
+      }
+    })
+  },
+
+  //点击开或者关锁
+  changeLock: function() {
+    if (this.data.clickAuth && this.data.clickAuth != "0") {
+      var deviceCode = that.data.deviceCode;
+      var elockStatus = that.data.elockStatus;
+      if (deviceCode == undefined || deviceCode == '' || elockStatus == undefined || elockStatus == '') {
+        wx.showModal({
+          title: '请输入设备号，并进行查询',
+          content: '',
+          showCancel: false
+        });
+        this.setData({
+          touchLock: false
+        })
+        return;
+      }
+      if (this.data.online == 0) {
+        wx.showModal({
+          title: '设备已离线，不能操作！',
+          content: '',
+          showCancel: false
+        });
+        return;
+      }
+      if (that.data.changeLock) {
+        //关锁功能
+        wx.showModal({
+          title: '提示',
+          content: '点确定后请耐心等待，不要进行重复操作，否则会出现操作失败',
+          showCancel: true,
+          success: function(res) {
+            if (res.confirm) {
+              wx.showToast({
+                title: '加载中...',
+                icon: 'loading',
+                duration: 9000,
+                mask: true
+              })
+              wx.request({
+                url: app.getBaseUrl() + 'service/wechat_getCloseLock',
+                method: "POST",
+                async: false,
+                data: {
+                  deviceCode: deviceCode
+                },
+                success: function(res) {
+                  var isSuccess = res.data.data.isSuccess;
+                  var s_obj = res.data.data.data;
+                  var elockStatus = that.data.elockStatus;
+                  console.log("关锁状态");
+                  if (isSuccess == 'N') {
+                    wx.showToast({
+                      title: '关锁失败',
+                      icon: 'loading',
+                      duration: 3000
+                    })
+                    return;
+                  }
+                  if (isSuccess == 'Y') {
+                    console.log(elockStatus);
+                    console.log("elockStatus");
+                    //这里进行页面循环调用查询监听设备状态是否开锁
+                    //这里进行页面循环调用查询监听设备状态
+                    if (elockStatus != '1') { //1 为关锁    0  为开锁 
+                      console.log("我进定时器");
+                      //这里循环请求查询状态接口检测是否改变状态
+                      //给定时器赋值开始
+                      that.setData({
+                        timer: setInterval(function() {
+                          console.log("进定时器方法");
+                          wx.request({
+                            url: app.getBaseUrl() + 'service/wechat_queryElectricLockStatusbyDeviceCode', //2开锁  1关锁
+                            method: "POST",
+                            async: false,
+                            data: {
+                              deviceCode: deviceCode,
+                              type: "1"
+                            },
+                            success: function(res) {
+                              var count = that.data.count;
+                              console.log(count + ":1");
+                              if (count > 10) {
+                                console.log("第10次调用");
+                                wx.showToast({
+                                  title: '请求超时，稍后操作',
+                                  duration: 3000,
+                                  icon: "none"
+                                })
+                                clearInterval(that.data.timer);
+                                return;
+                              }
+                              count = count + 1;
+                              console.log(count + ":2");
+                              var success = res.data.data.isSuccess;
+                              var sobjstatu = res.data.data.data;
+                              console.log("woshiguansuo");
+                              console.log(sobjstatu);
+                              if (success == 'Y') {
+                                console.log(sobjstatu.elockStatus);
+                                that.setData({
+                                  elockStatus: sobjstatu.elockStatus,
+                                  count: count
+                                })
+                              } else {
+                                that.setData({
+                                  elockStatus: that.data.elockStatus,
+                                  count: count
+                                })
+                              }
+                            },
+                            fail: function(err) {
+                              console.log("进入异常中");
+                              wx.showToast({
+                                title: '网络异常请重试',
+                                duration: 3000,
+                                icon: "none"
+                              })
+                              that.setData({
+                                count: 0
+                              })
+                              clearInterval(that.data.timer);
+                              return;
+                            }
+                          });
+
+                          if (that.data.elockStatus == '1') { //关锁 1该状态为执行命令后返回的状态值
+                            clearInterval(that.data.timer);
+                            that.setData({
+                              touchLock: false,
+                              changeLock: false,
+                              lockState: '关锁',
+                              elockStatus: that.data.elockStatus,
+                              count: 0
+                            });
+                            wx.showToast({
+                              title: '关锁成功',
+                              icon: 'success',
+                              duration: 3000,
+                              mask: true
+                            })
+                            return;
+                          }
+                          console.log("定时器方法完");
+                        }, 2000)
+                      })
+                      //给定时器赋值完毕
+                      console.log("定时器后");
+                    }
+                  }
+                },
+                fail: function(err) {
+                  console.log("进入异常中");
+                  wx.showToast({
+                    title: '网络异常请重试',
+                    duration: 3000,
+                    icon: "none"
+                  })
+                  that.setData({
+                    count: 0
+                  })
+                  clearInterval(that.data.timer);
+                  return;
+                }
+              });
+            } else {
+              console.log('用户点击取消,什么也不干')
+            }
+          }
+        })
+      } else {
+        //开锁功能
+        wx.showModal({
+          title: '提示',
+          content: '点确定后请耐心等待，不要进行重复操作，否则会出现操作失败',
+          showCancel: true,
+          success: function(res) {
+            if (res.confirm) {
+              wx.showToast({
+                title: '加载中...',
+                icon: 'loading',
+                duration: 9000,
+                mask: true
+              })
+              wx.request({
+                url: app.getBaseUrl() + 'service/wechat_getUnLockLogin',
+                method: "POST",
+                async: false,
+                data: {
+                  deviceCode: deviceCode
+                },
+                success: function(res) {
+                  var isSuccess = res.data.data.isSuccess;
+                  var s_obj = res.data.data.data;
+                  // var eleStatus = that.data.eleStatus;
+                  var elockStatus = that.data.elockStatus;
+                  if (isSuccess == 'N') {
+                    wx.showToast({
+                      title: '开锁失败',
+                      icon: 'loading',
+                      duration: 3000
+                    })
+                    return;
+                  }
+                  if (isSuccess == 'Y') {
+                    //这里进行页面循环调用查询监听设备状态
+                    if (elockStatus != '0') { //eleStatus  查询返回电子锁状态1 关锁  0 为开锁
+                      console.log("我进定时器");
+                      //这里循环请求查询状态接口检测是否改变状态
+                      //给定时器赋值开始
+                      that.setData({
+                        timer: setInterval(function() {
+                          console.log("进定时器方法");
+                          wx.request({
+                            url: app.getBaseUrl() + 'service/wechat_queryElectricLockStatusbyDeviceCode', //2开锁  1关锁
+                            method: "POST",
+                            async: false,
+                            data: {
+                              deviceCode: deviceCode,
+                              type: "2"
+                            },
+                            success: function(res) {
+                              var success = res.data.data.isSuccess;
+                              var sobjstatu = res.data.data.data;
+                              console.log(sobjstatu);
+                              var count = that.data.count;
+                              console.log(count + ":1");
+                              if (count > 10) {
+                                console.log("第10次调用");
+                                wx.showToast({
+                                  title: '请求超时，稍后操作',
+                                  duration: 3000,
+                                  icon: "none"
+                                })
+                                that.setData({
+                                  count: 0
+                                })
+                                clearInterval(that.data.timer);
+                                return;
+                              }
+                              count = count + 1;
+                              console.log(count + ":2");
+                              if (success == 'Y') {
+                                console.log(sobjstatu.elockStatus);
+                                that.setData({
+                                  elockStatus: sobjstatu.elockStatus,
+                                  count: count
+                                })
+                              } else {
+                                that.setData({
+                                  elockStatus: that.data.elockStatus,
+                                  count: count
+                                })
+                              }
+                            },
+                            fail: function(err) {
+                              wx.showToast({
+                                title: '网络异常请重试',
+                                duration: 3000,
+                                icon: "none"
+                              })
+                              clearInterval(that.data.timer);
+                              return;
+                            }
+                          });
+                          if (that.data.elockStatus == '0') { //此时开锁  0 
+                            clearInterval(that.data.timer);
+                            that.setData({
+                              touchLock: false,
+                              changeLock: true,
+                              lockState: '开锁',
+                              count: 0
+                              // eleStatus:''
+                            })
+                            wx.showToast({
+                              title: '开锁成功',
+                              icon: 'success',
+                              duration: 3000,
+                              mask: true
+                            })
+                            console.log("清理定时器");
+                            return;
+                          }
+
+                        }, 2000)
+                      })
+                      //给定时器赋值完毕
+                      console.log("定时器后");
+                    }
+                  }
+                },
+                fail: function(err) {
+                  wx.showToast({
+                    title: '网络异常请重试',
+                    duration: 3000,
+                    icon: "none"
+                  })
+                  that.setData({
+                    count: 0
+                  })
+                  clearInterval(that.data.timer);
+                  return;
+                }
+              });
+            } else {
+              console.log('用户点击取消,什么也不干')
+            }
+          }
+        })
+      }
+    //没有权限
+    }else{
+      wx.showToast({
+        title: '没有权限',
+        duration: 2000,
+        icon: "none"
+      })
+    }
+  },
+  startLock: function() {
+    if (this.data.clickAuth && this.data.clickAuth != 0){
+      this.setData({
+        touchLock: true
+      })
+    }
+  },
+  endLock: function() {
+
+  },
+  onLoad: function() {
+    that = this;
+    // wx.getStorage({
+    //   key: 'authority',
+    //   success: function(res) {
+    //     console.log(res.data.eLock)
+    //     that.setData({
+    //       clickAuth: res.data.eLock.switch
+    //     })
+    //   },
+    // })
+
+  },
+  onUnload: function() {
+    clearInterval(that.data.timer),
+      that.setData({
+        changeLock: false,
+        lockState: '关锁',
+        touchLock: false,
+        deviceCode: '',
+        elockStatus: '',
+        online: '',
+        eleStatus: '',
+        plateNo: '',
+        place: '',
+        createTime:'',
+      electricity:'',
+        timer: ''
+      })
+  }
+
+})

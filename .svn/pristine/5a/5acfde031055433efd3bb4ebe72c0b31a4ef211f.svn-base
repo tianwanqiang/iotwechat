@@ -1,0 +1,460 @@
+var auth_conf = require('../../utils/auth.js');
+var app = getApp();
+Page({
+  data: {
+    no: '',
+    list: [],
+    btnshow: 0,
+    //inputCode: 'HTM201803070464501',
+    inputCode: '',
+    selectedTmsIDArray: []
+  },
+  fail_use: auth_conf.fail_use,
+  /**
+   * 输入框监听器
+   */
+  inputCodeHandler: function(e) {
+    var that = this;
+    that.setData({
+      'inputCode': e.detail.value
+    });
+  },
+
+  /**
+   * 查询处理器
+   */
+  searchHandler: function() {
+    if (wx.getStorageSync('authority').binding.bindingSearch == 1) {
+      this.terminalNoBinding(this.data.inputCode, true);
+    } else {
+      this.fail_use()
+    }
+  },
+
+  /**
+   * 扫码处理器
+   */
+  scanHandler: function() {
+    var that = this;
+    wx.scanCode({
+      success: function(result) {
+        that.terminalNoBinding(result.result, true);
+      },
+      fail: function(error) {
+        console.log(error);
+      }
+    })
+  },
+  /**
+   * 查询配载单明细
+   */
+  terminalNoBinding: function(no, flag) {
+    var that = this;
+    if (!no) {
+      wx.showToast({
+        title: '输入签收单或者货运单号、终端号',
+        icon: 'none',
+        duration: 3000
+      });
+      return;
+    }
+    wx.showLoading({
+      title: '查询中'
+    });
+    var pno = that.data.no; //参数
+    if (flag) { //判断是查询进来，还是刷新
+      if (pno == '') {
+        pno = no;
+      } else {
+        pno = pno + "," + no;
+      }
+    } else { //刷新
+      that.data.selectedTmsIDArray = [];
+    }
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_terminalNoBinding',
+      method: "POST",
+      data: {
+        'no': pno,
+        tmsId: that.data.selectedTmsIDArray.join(',')
+      },
+      success: function(e) {
+				console.log(e);
+        var resultData = e.data.data;
+        if (resultData.isSuccess === 'Y') {
+          var ono = that.data.no;
+          if (ono == '') { //新的
+            ono = no;
+          } else if (ono.indexOf(no) == -1) { //没有包含重复的
+            ono = ono + ',' + no;
+          }
+          that.setData({
+            'no': ono,
+            'list': resultData.data,
+            'btnshow': 1
+          });
+          that.initCheckBox(that); //重置
+        } else if (resultData.isSuccess === 'S') {
+          wx.showToast({
+            title: '绑定成功!',
+            duration: 3000
+          });
+          setTimeout(function() {
+            that.terminalNoBinding(that.data.no, false);
+          }, 2000);
+
+        } else {
+          wx.showModal({
+            title: '',
+            content: resultData.data,
+            showCancel: false
+          });
+        }
+      },
+      complete: function(e) {
+        wx.hideLoading();
+      }
+    });
+  },
+
+  /**
+   * 选择框事件处理器
+   */
+  checkboxChange: function(e) {
+    this.setData({
+      'selectedTmsIDArray': e.detail.value
+    });
+    this.dealWithCheckboxChange(this, e.detail.value);
+    if (e.detail.value.length == 0) { //重置可不可以用
+      this.initCheckBox(this);
+    } else if (e.detail.value.length == 1) {
+      this.checkAddress(this, e.detail.value[0]);
+    }
+  },
+
+  dealWithCheckboxChange: function(that, tmsIds) {
+    var list = that.data.list;
+    for (var k = 0; k < tmsIds.length; k++) {
+      for (var i = 0, len = list.length; i < len; i++) {
+        if (tmsIds[k] == list[i].OMS_SUB_ORDER_TMS_ID) {
+          list[i].STATUE = true;
+          break;
+        }
+      }
+    }
+    that.setData({
+      'list': list,
+      'btnshow': 1
+    });
+  },
+  /**
+   * 检查地址是否一样的
+   */
+  checkAddress: function(that, tmsId) {
+    var list = that.data.list;
+    var temp = null;
+    for (var i = 0, len = list.length; i < len; i++) {
+      if (tmsId == list[i].OMS_SUB_ORDER_TMS_ID) {
+        temp = list[i].CONSIGNEE_ADR;
+        break;
+      }
+    }
+    if (null != temp) {
+      var subOrderNOs = [];
+      for (var i = 0, len = list.length; i < len; i++) {
+        if (list[i].TERMINAL_NO == '未绑定' && temp != list[i].CONSIGNEE_ADR) {
+          list[i].DISABLED = true;
+          subOrderNOs.push(list[i].SUB_ORDER_NO);
+        }
+      }
+      if (subOrderNOs.length != 0) {
+        wx.showModal({
+          title: '任务单号',
+          content: subOrderNOs.join(',') + ',收货地址不一致，不允许绑定！',
+          showCancel: false
+        })
+      }
+      that.setData({
+        'list': list
+      });
+    }
+  },
+  /**
+   * 重置
+   */
+  initCheckBox: function(that) {
+    var list = that.data.list;
+    if (Object.prototype.toString.call(list) === '[object Array]' && list.length > 0) { //判断是数组
+      for (var i = 0, len = list.length; i < len; i++) {
+        list[i].DISABLED = false;
+        list[i].STATUE = false;
+      }
+      that.setData({
+        'list': list
+      });
+    }
+  },
+
+  /**
+   * 解除绑定
+   */
+  unbinding: function(e) {
+    if (wx.getStorageSync('authority').binding.unbinding == 1) {
+      var that = this;
+      wx.showModal({
+        title: '消息',
+        content: '确定解除绑定吗！',
+        confirmColor: '#405f80',
+        success: function(res) {
+          if (res.confirm) {
+            wx.request({
+              url: app.getBaseUrl() + 'service/wechat_terminalNoUnBinding',
+              method: "POST",
+              data: {
+                tmsId: e.currentTarget.dataset.id
+              },
+              success: function(e) {
+                var resultData = e.data.data;
+                if (resultData.isSuccess === 'Y') {
+                  wx.showToast({
+                    title: resultData.data,
+                    duration: 3000
+                  });
+                  setTimeout(function() {
+                    that.terminalNoBinding(that.data.no, false);
+                  }, 3000);
+                } else {
+                  wx.showModal({
+                    title: '',
+                    content: resultData.data,
+                    showCancel: false
+                  });
+                }
+              }
+            });
+          }
+        }
+      })
+    } else {
+      this.fail_use()
+    }
+
+  },
+
+  //上传或取消上传操作
+  doUploading: function(e) {
+    var statue = e.currentTarget.dataset.statue;
+    if (statue == "上传成功") { //上传成功状态，代表此次操作是取消
+      if (wx.getStorageSync('authority').binding.bindingUpload == 1) {
+        var that = this;
+        wx.showModal({
+          title: '消息',
+          content: '确定取消上传吗？',
+          confirmColor: '#405f80',
+          success: function(res) {
+            if (res.confirm) {
+              that.reallyUploading(that, e.currentTarget.dataset.id, 1);
+            }
+          }
+        });
+      } else {
+        this.fail_use()
+      }
+
+    } else {
+      this.uploading(e, this);
+    }
+
+  },
+
+  /**
+   * 上传检查
+   */
+  uploading: function(e, that) {
+    var tmsId = e.currentTarget.dataset.id;
+		var terminal_NO = e.currentTarget.dataset.terminal;
+    wx.showModal({
+      title: '消息',
+      content: '确定上传北斗吗？',
+      confirmColor: '#405f80',
+      success: function(res) {
+        if (res.confirm) {
+          wx.request({
+            url: app.getBaseUrl() + 'service/wechat_terminalNoUploadCheck',
+            method: "POST",
+            data: {
+              tmsId: tmsId
+            },
+            success: function(e) {
+							var resultData = e.data;
+							console.log(resultData);
+							//是否可发车
+							if (resultData.data.isSuccess === 'Y') {
+								var isOnline
+								if (resultData.data.data.isOnline == 1) {
+									isOnline = '在线'
+								} else if (resultData.data.data.isOnline == 0) {
+									isOnline = '离线'
+								} else {
+									isOnline = '未知'
+								}
+								//是否大于2公里
+								if (resultData.data.data.distane > 2 || resultData.data.data.isOnline != 1 || resultData.data.data.electricity <30 ) {
+                  wx.showModal({
+                    title: '',
+										content: '终端号' + terminal_NO + ' \r\n位置距离发货点超出2公里\r\n 设备状态:' + isOnline + ' \r\n设备电量:' + resultData.data.data.electricity + '  \r\n是否确认上传？',
+                    success: function(res) {
+                      if (res.confirm) {
+                        that.reallyUploading(that, tmsId, 0);
+                      }
+                    }
+                  });
+                } else {
+                  that.reallyUploading(that, tmsId, 0);
+                }
+              } else {
+                wx.showModal({
+                  title: '',
+                  content: resultData.data.data,
+                  showCancel: false
+                });
+              }
+            }
+          });
+        }
+      }
+    })
+  },
+  //一键上传
+  quickUpload: function() {
+    var that = this;
+    var uplist = that.data.list;
+    var i = 0
+    wx.showModal({
+      title: '消息',
+      content: '确定上传北斗吗？',
+      confirmColor: '#405f80',
+      success: function(res) {
+        if (res.confirm) {
+          that.loopList(res, uplist, that, i)
+          // for (let i = 0; i < uplist.length; i++) {
+          // if (res.confirm) {
+          //   console.log(`i=${i}`)
+          //   console.log(uplist[i]);
+          // 	var tmsId = uplist[i].OMS_SUB_ORDER_TMS_ID
+          // 	that.reallyUploading(that, tmsId, 0);
+          // }
+          // }
+        }
+      }
+    })
+  },
+  loopList: function(res, uplist, that, i) {
+    // for (let j = 0; j < uplist.length; j++) {
+    //   var tmsId = uplist[j].OMS_SUB_ORDER_TMS_ID
+    //   that.reallyUploading(that, tmsId, 0);
+		// }
+
+    if (i < uplist.length) {
+      var tmsId = uplist[i].OMS_SUB_ORDER_TMS_ID
+      wx.request({
+        url: app.getBaseUrl() + 'service/wechat_terminalNoUploadCheck',
+        method: "POST",
+        data: {
+          tmsId: tmsId
+        },
+        success: function(e) {
+          var resultData = e.data;
+					if (resultData.isSuccess !='N' && resultData.data.isSuccess === 'Y') {
+						
+						var isOnline 
+						if (resultData.data.data.isOnline == 1){
+							isOnline ='在线'
+						} else if (resultData.data.data.isOnline == 0 ){
+							isOnline = '离线'
+						}else{
+							isOnline = '未知'
+						}
+						
+            if (resultData.data.data.distane > 2) {
+							console.log(isOnline)
+              wx.showModal({
+                title: '',
+								content: '终端号' + uplist[i].TERMINAL_NO + ' \r\n位置距离发货点超出2公里\r\n 设备状态:' + isOnline + ' \r\n设备电量:' + resultData.data.data.electricity + '  \r\n是否确认发车？',
+                success: function(res) {
+                  if (res.confirm) {
+										that.reallyUploadingAll(that, tmsId, 0, i, uplist);
+                  }
+                }
+              });
+            } else {
+							that.reallyUploadingAll(that, tmsId, 0, i, uplist);
+            }
+          } else {
+            wx.showModal({
+              title: '',
+              content: '上传失败',
+              showCancel: false
+            });
+						i++
+						that.loopList(res, uplist, that, i);
+          }
+        }
+      });
+		}
+  },
+  //全部上传
+	reallyUploadingAll: function (that, tmsId, isCancel, i, uplist) {
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_terminalNoUploading',
+      method: "POST",
+      data: {
+        tmsId: tmsId,
+        isCancel: 0
+      },
+      success: function(e) {
+        var resultData = e.data.data;
+        wx.showModal({
+          title: '',
+          content: resultData.data,
+          showCancel: false,
+          success: function(res) {
+            if (res.confirm) {
+              that.terminalNoBinding(that.data.no, false);
+              i++;
+              that.loopList(res, uplist, that, i)
+            }
+          }
+        });
+      }
+    })
+  },
+  /**
+   * 上传或取消上传
+   */
+  reallyUploading: function(that, tmsId, isCancel) {
+    wx.request({
+      url: app.getBaseUrl() + 'service/wechat_terminalNoUploading',
+      method: "POST",
+      data: {
+        tmsId: tmsId,
+        isCancel: isCancel
+      },
+      success: function(e) {
+        var resultData = e.data.data;
+        wx.showModal({
+          title: '',
+          content: resultData.data,
+          showCancel: false,
+          success: function(res) {
+            if (res.confirm) {
+              that.terminalNoBinding(that.data.no, false);
+            }
+          }
+        });
+      }
+    });
+
+  }
+
+})

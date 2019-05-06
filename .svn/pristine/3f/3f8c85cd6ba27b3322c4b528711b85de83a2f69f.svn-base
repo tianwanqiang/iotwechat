@@ -1,0 +1,3 @@
+<!--pages/test/testPage.wxml-->
+<text>pages/test/testPage.wxml</text>
+<view>{{hello}}</view>
