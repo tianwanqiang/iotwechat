@@ -13,8 +13,7 @@
     "pages/tms/trackQuery/searchMap/searchMap",
     "pages/tms/deviceManage/deviceInfo/deviceInfo",
     "pages/tms/deviceManage/deviceParam/deviceParam",
-    "pages/tms/trackQuery/webmap/webmap",
-    "pages/tms/demo/demo"
+    "pages/tms/trackQuery/webmap/webmap"
   ],
   "window": {
     "navigationBarBackgroundColor": "#405f80",

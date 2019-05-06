@@ -45,13 +45,10 @@ Page({
          
         }
       }
-
-      setTimeout(function(){
-        console.log("开始加载数据");
-        that.setData({
-          sourceurl: encodeURI(base_url)
-        })
-      },1000);
+    
+      that.loadUrl(base_url);
+  
+    
     }
    
   },
@@ -61,5 +58,13 @@ Page({
    */
   onShow: function () {
 
+  },
+  loadUrl:function(){
+    var base_url = arguments[0];
+    var that = this;
+    that.setData({
+      sourceurl: encodeURI(base_url)
+    })
   }
+
 })

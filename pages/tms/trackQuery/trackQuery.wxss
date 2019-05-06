@@ -348,19 +348,50 @@ margin-top:28%;
 }
 
 .controlImage{
-display:flex;
+/* display:flex;
 overflow:hidden;
 pointer-events:auto;
-height:25px;
-width:25px;
-border-color:rgba(77,29,23,0.7);
-border-width:1px;
-border-style:solid;
-box-shadow: 1px 1px rgb(151, 136, 136);
+height:26px;
+width:26px;
+background-color: #FFF;
+box-shadow: 1px 2px 1px rgba(0,0,0,.15);
+cursor: pointer;
 margin-left:91%;
 margin-top:28rpx;
 margin-right:9rpx;
 padding-right:9rpx;
+   background-image: url(//webmap0.bdimg.com/wolfman/static/common/images/api/mapZoom.png);
+    background-position: 0 0; */
+    box-shadow: 1px 2px 1px rgba(0,0,0,.15);
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    left: 30px;
+    overflow: hidden;
+    background-color: #FFF;
+    z-index: 10;
+
+}
+.controlImage:first-child {
+    border-bottom: 1px solid #ccc;
+}
+.controlImage .out {
+    width: 10px;
+    height: 10px;
+    background-image: url(//webmap0.bdimg.com/wolfman/static/common/images/api/mapZoom.png);
+    background-position: -10px 0;
+    /* position: absolute; */
+    margin:20rpx auto;
+
+}
+.controlImage .in{
+    width: 10px;
+    height: 10px;
+    top: 8px;
+    left: 8px;
+    background-image: url(//webmap0.bdimg.com/wolfman/static/common/images/api/mapZoom.png);
+    background-position: 0 0;
+    margin:20rpx auto;
 
 }
 

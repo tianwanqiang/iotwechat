@@ -81,9 +81,18 @@
 
   <view class="list01 {{currentTab==2?'show':'hidden'}}">
     <map id="trackMap" longitude="{{longitude}}"  latitude="{{latitude}}" scale="{{scale}}"  markers="{{markers}}" class='mapCls'  bindtap="bindregionchange">
-    <cover-view class='controlsTab'> <cover-image bindtap='subScale' src="/Image/lit.png" class="controlImage">
+    <cover-view class='controlsTab'> 
+    <!-- <cover-image bindtap='subScale' src="/Image/lit.png" class="controlImage">
    </cover-image>
-  <cover-image bindtap='addScale' class="controlImage" src='/Image/big.png'></cover-image></cover-view>
+  <cover-image bindtap='addScale' class="controlImage" src='/Image/big.png'></cover-image> -->
+
+      <cover-view bindtap='subScale' class="controlImage">
+      <cover-view class="in"></cover-view>
+   </cover-view>
+  <cover-view bindtap='addScale' class="controlImage">
+ <cover-view class="out"></cover-view>
+  </cover-view>
+  </cover-view>
     </map>
   </view>
  </view>
