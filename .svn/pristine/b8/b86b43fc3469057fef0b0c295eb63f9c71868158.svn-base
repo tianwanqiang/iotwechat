@@ -22,7 +22,7 @@ Page({
     animationData: "",
     showModalStatus: false,
     imageHeight: 0,
-    deviceH: 0,
+    deviceH:0,
     items: [],
     type: 0, //查询类型 默认设备号
     allcar: 0, //全部车
@@ -32,12 +32,12 @@ Page({
     alcar: 0, //报警,
     longitude: 121.40,
     latitude: 31.7,
-    markers: [{
-      id: 0,
+    markers:[{
+      id:0,
       latitude: 31.7,
       longitude: 121.40,
-      zIndex: 11111,
-      iconPath: '/Image/center.png'
+      zIndex:11111,
+      iconPath:'/Image/center.png'
     }],
     controls: [{
       id: 1,
@@ -50,16 +50,15 @@ Page({
       },
       clickable: true
     }, {
-      id: 2,
-      iconPath: '/Image/lit.png',
-      position: {
-        left: 250,
-        top: 160,
-        width: 60,
-        height: 60
-      },
-      clickable: true
-    }]
+        id: 2,
+        iconPath: '/Image/lit.png',
+        position: {
+          left: 250,
+          top: 160,
+          width: 60,
+          height: 60
+        },
+        clickable: true}]
   },
 
   //点击切换
@@ -72,11 +71,11 @@ Page({
         currentTab: e.target.dataset.current,
       })
     }
-    if (e.target.dataset.current == 2) {
+    if(e.target.dataset.current==2){
       //加载地图页面数据
-
-      that.searchPointList(that.data.latitude, that.data.longitude, 5);
-
+     
+     that.searchPointList(that.data.latitude, that.data.longitude, 5);
+  
     }
   },
   //分类tab
@@ -92,18 +91,18 @@ Page({
         isFromSearch: true
       });
 
-      if (currentTab == 1) {
+      if (currentTab==1){
         ////0离线1运动2停车3休眠4关机
         that.fetchSearchList(that.data.items.join(","), that.data.type, status);
-      } else {
-        //查询地图中心点附近设备
+      }else{
+       //查询地图中心点附近设备
+       
+      //加载地图页面数据
+      that.searchPointList(that.data.latitude, that.data.longitude, status);
 
-        //加载地图页面数据
-        that.searchPointList(that.data.latitude, that.data.longitude, status);
-
-
+       
       }
-
+     
     }
   },
   //跳转到搜索条件
@@ -115,18 +114,18 @@ Page({
   onLoad: function(options) {
     var that = this;
     that.initPageData(options);
-
-
+    
+   
   },
 
-  onPullDownRefresh: function(options) {
+  onPullDownRefresh:function(options){
     wx.stopPullDownRefresh();
     wx.showNavigationBarLoading();
     this.initPageData();
     wx.hideNavigationBarLoading();
   },
   searchGroupInfo: function() {
-    let that = arguments[0];
+    var that = this;
     wx.request({
       url: app.getBaseUrl() + 'gps/wechat/gps/statusCount',
       method: "GET",
@@ -143,7 +142,7 @@ Page({
           wx.clearStorageSync();
           return;
         }
-        if (res.data.success == true) {
+         if (res.data.success == true) {
           var arryres = res.data.object;
           var run = 0,
             stay = 0,
@@ -167,7 +166,7 @@ Page({
             offcar: off,
             pcar: stay
           });
-        } else {
+        }else{
           MSG.showToast('请稍等');
         }
       }
@@ -196,20 +195,20 @@ Page({
         key: wx.getStorageSync('appkey')
       },
       success: function(res) {
-        if (res.data.msg && res.data.msg.indexOf('key') != -1) {
+         if(res.data.msg && res.data.msg.indexOf('key')!=-1){
           MSG.sessionExpire();
           return;
         }
         var isSuccess = res.data.success;
         var s_obj = res.data.object;
-        if (isSuccess == false) {
+        if (isSuccess==false) {
           that.setData({
             val: '',
             isFromSearch: true, //第一次加载，设置true  
             searchLoading: false, //把"上拉加载"的变量设为true，显示  
             searchLoadingComplete: false //把“没有数据”设为false，隐藏
           });
-
+        
           MSG.showToast('无数据');
           return;
         } else {
@@ -234,24 +233,22 @@ Page({
             }
           } else {
             MSG.showToast('无数据');
-
+                      
           }
         }
 
       },
       fail: function(err) {
-        MSG.showToast('网络异常');
+         MSG.showToast('网络异常');
       }
     });
   },
 
   //查询地图分布
-  searchPointList: function() {
-    let lat = arguments[0],
-      lng = arguments[1],
-      platstat = arguments[2];
+  searchPointList: function (lat,lng, platstat) {
+
     let that = this;
-    wx.request({
+      wx.request({
       url: app.getBaseUrl() + 'gps/wechat/gps/queryByPosition', //根据坐标查询附近设备
       header: {
         'X-NameSpace-Code': 'sit',
@@ -262,58 +259,59 @@ Page({
         lat: lat, //查询类型
         lng: lng,
         carState: platstat,
-        radius: 100000,
+        radius: 100000, 
         key: wx.getStorageSync('appkey')
       },
-      success: function(res) {
-        if (res.data.msg == 'key is null!' || res.data.msg == 'key not exists') {
-
+      success: function (res) {
+         
+        if (res.data.msg == 'key is null!'|| res.data.msg =='key not exists') {
+          
           MSG.showModal('登录过期');
           return;
         }
         var isSuccess = res.data.success;
-
+        
         var s_obj = res.data.object;
-
-        if (isSuccess == false) {
+       
+         if (isSuccess == false) {
           MSG.showToast('无数据')
           return;
         } else {
-
+           
           if (s_obj.length !== 0 && s_obj.length != undefined) {
             let markers = that.data.markers;
             let circles = []
             circles.push({
-              latitude: lat,
-              longitude: lng,
-              fillColor: '#0000003a',
+              latitude:lat,
+              longitude:lng,
+              fillColor:'#0000003a',
               radius: 100000,
-              strokeWidth: 2
+              strokeWidth:2
             })
-
-
-            for (let i = 0; i < s_obj.length; i++) {
-              let marker = new Object();
-              marker.latitude = s_obj[i].lat;
-              marker.longitude = s_obj[i].lng;
-              marker.iconPath = "/Image/location-red.png";
-              markers.push(marker);
-            }
-            that.setData({
-              markers: markers,
-              scale: 8,
-              longitude: lng,
-              latitude: lat,
-              circles: circles
-            })
+          
+       
+             for(let i =0;i< s_obj.length;i++){
+               let marker = new Object();
+               marker.latitude =  s_obj[i].lat;
+               marker.longitude = s_obj[i].lng;
+               marker.iconPath = "/Image/location-red.png";
+               markers.push(marker);
+             }
+             that.setData({
+               markers: markers,
+               scale:8,
+               longitude:lng,
+               latitude:lat,
+               circles: circles
+             })
           } else {
-            MSG.showToast('无数据');
-          }
+             MSG.showToast('无数据');
+         }
         }
 
       },
-      fail: function(err) {
-        MSG.showToast('网络异常');
+      fail: function (err) {
+           MSG.showToast('网络异常');
       }
     });
   },
@@ -361,11 +359,11 @@ Page({
         if (res.msg) {
           MSG.sessionExpire();
         }
-
+       
         var isSuccess = res.data.success;
         var s_obj = res.data.object;
         if (isSuccess == false) {
-          MSG.showToast('无数据')
+         MSG.showToast('无数据')
           return;
         }
         if (isSuccess == true) {
@@ -380,14 +378,14 @@ Page({
         }
       },
       fail: function(err) {
-
+     
         MSG.showToast('网络异常')
       }
     });
   },
   buttonTruck: function(e) {
     var deviceno = e.currentTarget.dataset.type; //设备号
-
+   
     wx.navigateTo({
       url: './webmap/webmap?duration=today&deviceno=' + deviceno,
     })
@@ -417,16 +415,16 @@ Page({
     return trackBegin;
   },
 
-  bindregionchange: function(e) {
+  bindregionchange:function(e){
     var that = this;
     wx.chooseLocation({
       success: function(res) {
-
+         
         that.setData({
           longitude: res.longitude,
           latitude: res.latitude,
         });
-
+        
         //设置地图中心
         wxMap.translateMarker({
           markerId: 0,
@@ -436,35 +434,35 @@ Page({
             autoRotate: false,
             rotate: 0
           },
-        }) //移动到地图中心
-
-        that.searchPointList(that.data.latitude, that.data.longitude, that.data.ctall);
+        })//移动到地图中心
+       
+        that.searchPointList(that.data.latitude, that.data.longitude, that.data.ctall);  
       },
     })
 
     wxMap.translateMarker({
-      markerId: 0,
-      destination: {
+      markerId:0,
+      destination:{
         longitude: that.data.longitude,
         latitude: that.data.latitude,
-        autoRotate: false,
-        rotate: 0
+        autoRotate:false,
+        rotate:0
       },
-    }) //移动到地图中心
-
-    that.searchPointList(that.data.latitude, that.data.longitude, that.data.ctall);
+    })//移动到地图中心
+    
+    that.searchPointList(that.data.latitude, that.data.longitude, that.data.ctall);  
   },
-  addScale: function() {
-    let scale = this.data.scale;
-    if (scale == 18) {
-      return;
-    } else {
-      this.setData({
-        scale: scale + 1
-      })
-    }
+  addScale:function(){
+     let scale = this.data.scale;
+     if(scale == 18){
+       return;
+     }else{
+       this.setData({
+         scale:scale+1
+       })
+     }
   },
-  subScale: function() {
+  subScale:function(){
     let scale = this.data.scale;
     if (scale == 5) {
       return;
@@ -475,17 +473,17 @@ Page({
     }
   },
   //初始化页面数据，刷新时调用
-  initPageData: function(options) {
+  initPageData: function (options) {
     var that = this;
     wxMap = wx.createMapContext('trackMap', this);
     wx.getSystemInfo({
-      success: function(res) {
+      success: function (res) {
         that.setData({
           scale: 6
         })
       },
     })
-    that.searchGroupInfo(that);
+    that.searchGroupInfo();
     that.setData({
       currentTab: 1,
       ctall: 5

@@ -45,13 +45,13 @@ Page({
          
         }
       }
-       (function(){
-        var base_url = arguments[0];
-        var that = arguments[1];;
+
+      setTimeout(function(){
+        console.log("开始加载数据");
         that.setData({
           sourceurl: encodeURI(base_url)
         })
-      })(base_url,that);
+      },1000);
     }
    
   },
@@ -62,5 +62,4 @@ Page({
   onShow: function () {
 
   }
-
 })
