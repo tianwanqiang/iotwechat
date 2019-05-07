@@ -77,7 +77,6 @@ Page({
     thrday:false,
     twoday:false,
     today:true,//默认选择当天的
-    inputShowed:false,
     endDate:'',
     startDate:'',
     is_custome:false,
@@ -270,22 +269,10 @@ Page({
       })
     }
   },
-  showInput: function () {
-    this.setData({
-      inputShowed: true
-    });
-  },
-  clearInput:function(){
-    this.setData({
-      inputShowed: false,
-      platNo:"",
-    })
-  },
   ensureParam:function(e){
     //1.车牌号，设备号
     //2.时间
     let platNo = this.data.platNo;
-    debugger
     if (!platNo){
        MSG.showModal('设备号为必填项');
       return;
